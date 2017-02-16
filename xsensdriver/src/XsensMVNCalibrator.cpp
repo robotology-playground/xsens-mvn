@@ -1,3 +1,10 @@
+/*
+* Copyright(C) 2016 iCub Facility
+* Authors: Francesco Romano
+* CopyPolicy : Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+*/
+
+
 #include "XsensMVNCalibrator.h"
 #include <xsens/xmecontrol.h>
 #include <xsens/xmecalibrationresult.h>
@@ -113,7 +120,7 @@ namespace xsens {
             //From Xsens support:
             //Between the startCalibration and the stopCalibration, 
             //the system will record the calibration data (60Hz). 
-            //You’ll then need to get the poses by calling XmePose calibPose = myXme->calibrationPose(frameStart++);
+            //YouÂ’ll then need to get the poses by calling XmePose calibPose = myXme->calibrationPose(frameStart++);
 
             m_suitsConnector.startCalibration();
             for (int phase = 0; phase < phases.size() - 1; phase++) {
@@ -249,6 +256,5 @@ namespace xsens {
     {
 
     }
-
 
 }

@@ -1,3 +1,9 @@
+/*
+* Copyright(C) 2016 iCub Facility
+* Authors: Francesco Romano
+* CopyPolicy : Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+*/
+
 #include "XsensMVNWrapper.h"
 
 #include <thrift/XsensFrame.h>
@@ -26,7 +32,11 @@ namespace yarp {
         {
         public:
 
-            XsensMVNWrapperPrivate() : RateThread(100) {}
+            XsensMVNWrapperPrivate() 
+                : RateThread(100)
+            , m_human(0)
+            , m_timedDriver(0)
+            , m_segmentsCount(0) {}
 
             virtual ~XsensMVNWrapperPrivate() {}
             yarp::os::Mutex m_mutex;
@@ -40,34 +50,69 @@ namespace yarp {
             std::vector<yarp::sig::Vector> m_velocities;
             std::vector<yarp::sig::Vector> m_accelerations;
 
+            unsigned m_segmentsCount;
+
             virtual void run()
             {
                 if (!m_human) return;
                 //read from device
                 yarp::os::LockGuard guard(m_mutex);
-                yInfo() << "[RUN]" << __FILE__ << ":" << __LINE__;
 
                 yarp::os::Stamp timestamp = m_timedDriver->getLastInputStamp();
                 if (!m_human->getSegmentInformation(m_poses, m_velocities, m_accelerations)) {
                     yError("Reading from Xsens device returned error");
+                    return;
                 }
 
                 xsens::XsensFrame &frame = m_outputPort.prepare();
+                frame.segmentsData.resize(m_segmentsCount);
+                for (unsigned seg = 0; seg < m_segmentsCount; ++seg) {
+                    xsens::Vector3 &position = frame.segmentsData[seg].position;
+                    xsens::Vector4 &orientation = frame.segmentsData[seg].orientation;
+                    xsens::Vector3 &linVelocity = frame.segmentsData[seg].velocity;
+                    xsens::Vector3 &angVelocity = frame.segmentsData[seg].angularVelocity;
+                    xsens::Vector3 &linAcceleration = frame.segmentsData[seg].acceleration;
+                    xsens::Vector3 &angAcceleration = frame.segmentsData[seg].angularAcceleration;
+                   
+                    yarp::sig::Vector &newPose = m_poses[seg];
+                    yarp::sig::Vector &newVelocity = m_velocities[seg];
+                    yarp::sig::Vector &newAcceleration = m_accelerations[seg];
+
+                    position.c1 = newPose[0];
+                    position.c2 = newPose[1];
+                    position.c3 = newPose[2];
+                    orientation.c1 = newPose[3];
+                    orientation.c2 = newPose[4];
+                    orientation.c3 = newPose[5];
+                    orientation.c4 = newPose[6];
+
+                    linVelocity.c1 = newVelocity[0];
+                    linVelocity.c2 = newVelocity[1];
+                    linVelocity.c3 = newVelocity[2];
+                    angVelocity.c1 = newVelocity[3];
+                    angVelocity.c2 = newVelocity[4];
+                    angVelocity.c3 = newVelocity[5];
+
+                    linAcceleration.c1 = newAcceleration[0];
+                    linAcceleration.c2 = newAcceleration[1];
+                    linAcceleration.c3 = newAcceleration[2];
+                    angAcceleration.c1 = newAcceleration[3];
+                    angAcceleration.c2 = newAcceleration[4];
+                    angAcceleration.c3 = newAcceleration[5];
+
+                }
                 
                 m_outputPort.write();
             }
 
             virtual bool calibrate()
             {
-                yInfo() << __FILE__ << ":" << __LINE__;
                 return calibrateWithType("");
             }
 
             virtual bool calibrateWithType(const std::string& calibrationType)
             {
-                yInfo() << __FILE__ << ":" << __LINE__;
                 if (!m_human) return false;
-                yInfo() << __FILE__ << ":" << __LINE__;
                 resume();
                 bool result = m_human->calibrate(calibrationType);
                 suspend();
@@ -189,16 +234,18 @@ namespace yarp {
 
             yInfo() << __FILE__ << ":" << __LINE__;
             //resize the vectors
-            unsigned segmentCount = m_pimpl->m_human->getSegmentCount();
-            m_pimpl->m_poses.resize(segmentCount);
-            m_pimpl->m_velocities.resize(segmentCount);
-            m_pimpl->m_accelerations.resize(segmentCount);
-            for (unsigned i = 0; i < segmentCount; ++i) {
+            m_pimpl->m_segmentsCount = m_pimpl->m_human->getSegmentCount();
+            m_pimpl->m_poses.resize(m_pimpl->m_segmentsCount);
+            m_pimpl->m_velocities.resize(m_pimpl->m_segmentsCount);
+            m_pimpl->m_accelerations.resize(m_pimpl->m_segmentsCount);
+            for (unsigned i = 0; i < m_pimpl->m_segmentsCount; ++i) {
                 m_pimpl->m_poses[i].resize(7, 0.0);
                 m_pimpl->m_velocities[i].resize(6, 0.0);
                 m_pimpl->m_accelerations[i].resize(6, 0.0);
             }
-
+            xsens::XsensFrame &frame = m_pimpl->m_outputPort.prepare();
+            frame.segmentsData.reserve(m_pimpl->m_segmentsCount);
+            m_pimpl->m_outputPort.unprepare();
 
             return true;
         }

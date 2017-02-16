@@ -26,9 +26,9 @@ public:
 
     virtual ~IHumanSkeleton();
 
-    virtual unsigned getSegmentCount() const;
+    virtual unsigned getSegmentCount() const = 0;
     virtual std::string segmentNameAtIndex(unsigned segmentIndex) const;
-    virtual std::vector<std::string> segmentNames() const;
+    virtual std::vector<std::string> segmentNames() const = 0;
     virtual int segmentIndexForName(const std::string& name) const;
 
     //Configuration

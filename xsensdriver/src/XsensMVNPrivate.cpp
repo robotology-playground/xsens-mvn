@@ -188,6 +188,7 @@ bool yarp::dev::XsensMVN::XsensMVNPrivate::startAcquisition()
     //TODO: do some checks also on the status of the device
     m_acquiring = true;
     m_connection->setRealTimePoseMode(true);
+    yInfo("Starting acquiring data");
     return true;
 
 }
@@ -197,6 +198,7 @@ bool yarp::dev::XsensMVN::XsensMVNPrivate::stopAcquisition()
     if (!m_connection) return false;
     m_acquiring = false;
     m_connection->setRealTimePoseMode(false);
+    yInfo("Stopping acquiring data");
     return true;
 }
 
@@ -403,5 +405,7 @@ void yarp::dev::XsensMVN::XsensMVNPrivate::calibratorHasReceivedNewCalibrationPo
 
     for (unsigned index = 0; index < newPose.size(); ++index) { 
         m_lastSegmentPosesRead[index] = newPose[index];
+        m_lastSegmentVelocitiesRead[index].zero();
+        m_lastSegmentAccelerationRead[index].zero();
     }
 }

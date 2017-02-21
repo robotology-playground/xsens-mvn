@@ -2,6 +2,7 @@
 <robot name="xsens">
 
     <device type="xsens_mvn" name="XsensSuit">
+		<param name="license-dir">"C:\\Program Files\\Xsens\\MVN SDK 4.2\\SDK Files\\rundeps"</param>
 		<param name="suit-config">Human/FullBody</param>
     </device>
 	

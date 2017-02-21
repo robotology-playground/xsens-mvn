@@ -37,9 +37,26 @@ bool yarp::dev::XsensMVN::XsensMVNPrivate::init(yarp::os::Searchable &config)
 {
     if (m_connection) return false;
 
-    TCHAR pwd[MAX_PATH];
-    GetCurrentDirectory(MAX_PATH, pwd);
-    std::wcout << "[INFO]PWD: " << pwd << "\n";
+    //First thing: retrieve paths. As from Xsens support:
+    //The location of the other files (xmedef, *.mvnc) can be configured at runtime by calling xmeSetPaths. 
+    //This expects in this order: the path to the xmedef.xsb file, also used for the .mvnc files,
+    // the path where props.xsb can be found (probably not useful for you),
+    // the path where you want the xme.log to be put and a Boolean value if you want to remove the old xme.log 
+    // (if you specified a new path). Specifying empty strings will use the default path for those options.
+
+    //getting TEMP folder
+    TCHAR tempFolder[MAX_PATH + 1];
+    if (GetTempPath(MAX_PATH, tempFolder) == 0) {
+        yWarning("Failed to retrieve temporary folder");
+    }
+    std::wstring wideCharString(tempFolder);
+
+    std::string tempFolderConverted(wideCharString.begin(), wideCharString.end());
+    yInfo() << "Temporary directory is " << tempFolderConverted;
+
+    yarp::os::ConstString licenseDir = config.check("license-dir", yarp::os::Value(""), "Checking directory containing license files").asString();
+    xmeSetPaths(licenseDir.c_str(), "", tempFolder, true);
+    yInfo("Reading license files from %s", licenseDir.c_str());
 
     m_connection = XmeControl::construct();
     if (!m_connection) {

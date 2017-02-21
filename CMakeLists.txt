@@ -29,13 +29,14 @@ set(COMPILE_BY_DEFAULT ON)
 
 ##Moving this part into yarp_configure_external_installation#these two should be moved to YARP::dev ?
 add_library(yarp_experimental STATIC ${xsens-mvn_SOURCE_DIR}/yarp/include/yarp/dev/IHumanSkeleton.h
-									 ${xsens-mvn_SOURCE_DIR}/yarp/IHumanSkeleton.cpp)
+                   ${xsens-mvn_SOURCE_DIR}/yarp/IHumanSkeleton.cpp)
 #set_target_properties(yarp_experimental PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
-							  
+
 target_link_libraries(yarp_experimental YARP::YARP_dev)
 target_include_directories(yarp_experimental SYSTEM PUBLIC yarp/include ${YARP_INCLUDE_DIRS})
 target_include_directories(yarp_experimental PRIVATE yarp/include/yarp/dev)
-								
+
+find_package(XsensXME)
 
 add_subdirectory(xsensdriver)
 add_subdirectory(xsenswrapper)

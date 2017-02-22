@@ -1,5 +1,6 @@
 Yarp drivers for the Xsens MVN system.
 ==========================================
+![travis-ci](https://travis-ci.org/robotology-playground/xsens-mvn.svg?branch=master)
 
 
 ### Dependencies

@@ -105,6 +105,10 @@ namespace yarp {
                 m_outputPort.write();
             }
 
+            virtual void calibrateAsync() { calibrateWithType(""); }
+           
+            virtual void calibrateAsyncWithType(const std::string& calibrationType) { calibrateWithType(calibrationType);  }
+
             virtual bool calibrate()
             {
                 return calibrateWithType("");
@@ -253,7 +257,9 @@ namespace yarp {
         bool XsensMVNWrapper::detach()
         {
             assert(m_pimpl);
+            yInfo() << __FILE__ << ":" << __LINE__;
             yarp::os::LockGuard guard(m_pimpl->m_mutex);
+            yInfo() << __FILE__ << ":" << __LINE__;
             m_pimpl->m_human = 0;
             m_pimpl->m_timedDriver = 0;
             return true;

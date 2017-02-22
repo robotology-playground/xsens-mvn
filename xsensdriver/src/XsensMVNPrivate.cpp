@@ -183,6 +183,17 @@ bool yarp::dev::XsensMVN::XsensMVNPrivate::fini()
         m_connection->destruct();
         m_connection = 0;
     }
+    //Xsens now should not provide anymore callbacks
+    //close the thread
+    std::unique_lock<std::mutex> lock(m_processorGuard);
+    m_stopProcessor = true;
+    //notify the thread
+    m_processorVariable.notify_one();
+    //now wait for the thread to receive the stop command
+    //when the thread puts the m_stopProcessor to false this means
+    //it received the command
+    m_processorVariable.wait(lock, [&](){ return !m_stopProcessor; });
+
     return true;
 }
 
@@ -264,50 +275,61 @@ bool yarp::dev::XsensMVN::XsensMVNPrivate::abortCalibration()
 
 void yarp::dev::XsensMVN::XsensMVNPrivate::processNewFrame()
 {
-    std::unique_lock<std::mutex> lock(m_processorGuard);
-    //while no data
-    m_processorVariable.wait(lock, [&](){ return !m_frameData.empty(); });
-    //get the copied data
-    FrameData lastFrame = m_frameData.front();
-    m_frameData.pop();
-    //release lock
-    lock.unlock();
+    while (true) {
+        std::unique_lock<std::mutex> lock(m_processorGuard);
+        //while no data
+        m_processorVariable.wait(lock, [&](){ return m_stopProcessor || !m_frameData.empty(); });
+        //last chance to check if we have to return
+        //before starting processing stuff
+        if (m_stopProcessor) {
+            //we should return
+            //put stop back to false
+            //and notify the other thread
+            m_stopProcessor = false;
+            m_processorVariable.notify_one();
+            break;
+        }
+        //get the copied data
+        FrameData lastFrame = m_frameData.front();
+        m_frameData.pop();
+        //release lock
+        lock.unlock();
 
-    //process incoming pose to obtain information
+        //process incoming pose to obtain information
 
-    {
-        //Unique lock for all data?
-        std::lock_guard<std::mutex> readLock(m_dataMutex);
+        {
+            //Unique lock for all data?
+            std::lock_guard<std::mutex> readLock(m_dataMutex);
 
-        if (m_lastSegmentPosesRead.size() != lastFrame.pose.m_segmentStates.size()) return; //error
-        //HP: absoluteTime = ms from epoch (as Unix Epoch)
-        long unixTime = lastFrame.pose.m_absoluteTime;
-        double time = unixTime / 1000.0;
-        m_lastIMUsTimestamp = yarp::os::Stamp(lastFrame.pose.m_frameNumber, time);
+            if (m_lastSegmentPosesRead.size() != lastFrame.pose.m_segmentStates.size()) return; //error
+            //HP: absoluteTime = ms from epoch (as Unix Epoch)
+            long unixTime = lastFrame.pose.m_absoluteTime;
+            double time = unixTime / 1000.0;
+            m_lastIMUsTimestamp = yarp::os::Stamp(lastFrame.pose.m_frameNumber, time);
 
-        for (unsigned index = 0; index < lastFrame.pose.m_segmentStates.size(); ++index) {
-            const XmeSegmentState &segmentData = lastFrame.pose.m_segmentStates[index];
-            yarp::sig::Vector &segmentPosition = m_lastSegmentPosesRead[index];
-            yarp::sig::Vector &segmentVelocity = m_lastSegmentVelocitiesRead[index];
-            yarp::sig::Vector &segmentAcceleration = m_lastSegmentAccelerationRead[index];
+            for (unsigned index = 0; index < lastFrame.pose.m_segmentStates.size(); ++index) {
+                const XmeSegmentState &segmentData = lastFrame.pose.m_segmentStates[index];
+                yarp::sig::Vector &segmentPosition = m_lastSegmentPosesRead[index];
+                yarp::sig::Vector &segmentVelocity = m_lastSegmentVelocitiesRead[index];
+                yarp::sig::Vector &segmentAcceleration = m_lastSegmentAccelerationRead[index];
 
 
-            for (unsigned i = 0; i < 3; ++i) {
-                //linear part
-                segmentPosition(i) = segmentData.m_position[i];
-                segmentVelocity(i) = segmentData.m_velocity[i];
-                segmentAcceleration(i) = segmentData.m_acceleration[i];
-                //angular part for velocity and acceleration
-                //TODO: check quaternion format of Xsens
-                segmentPosition(3 + i) = segmentData.m_orientation[i];
-                segmentVelocity(3 + i) = segmentData.m_angularVelocity[i];
-                segmentAcceleration(i) = segmentData.m_angularAcceleration[i];
+                for (unsigned i = 0; i < 3; ++i) {
+                    //linear part
+                    segmentPosition(i) = segmentData.m_position[i];
+                    segmentVelocity(i) = segmentData.m_velocity[i];
+                    segmentAcceleration(i) = segmentData.m_acceleration[i];
+                    //angular part for velocity and acceleration
+                    //TODO: check quaternion format of Xsens
+                    segmentPosition(3 + i) = segmentData.m_orientation[i];
+                    segmentVelocity(3 + i) = segmentData.m_angularVelocity[i];
+                    segmentAcceleration(i) = segmentData.m_angularAcceleration[i];
+                }
+                //last element of orientation
+                segmentPosition(6) = segmentData.m_orientation[3];
             }
-            //last element of orientation
-            segmentPosition(6) = segmentData.m_orientation[3];
         }
     }
-
     //newFrame.sensorsData.reserve(lastFrame.sensorsData.size());
     //for (auto segmentData : lastFrame.sensorsData) {
     //    xsens::XsensSensorData sensor;

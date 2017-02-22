@@ -23,6 +23,7 @@ yarp::dev::XsensMVN::~XsensMVN()
     assert(m_pimpl);
     delete m_pimpl;
     m_pimpl = 0;
+    yInfo() << __FILE__ << ":" << __LINE__;
 }
 
 bool yarp::dev::XsensMVN::open(yarp::os::Searchable &config)
@@ -39,6 +40,7 @@ bool yarp::dev::XsensMVN::close()
     assert(m_pimpl);
     yarp::os::LockGuard guard(m_mutex);
     m_pimpl->fini();
+    yInfo() << __FILE__ << ":" << __LINE__;
     return true;
 }
 

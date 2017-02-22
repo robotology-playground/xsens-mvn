@@ -145,7 +145,7 @@ namespace xsens {
                                 currentSegment(i) = currentPoseSegment.m_position[i];
                                 currentSegment(3 + i) = currentPoseSegment.m_orientation[i];
                             }
-                            currentSegment(6) = currentPoseSegment.m_orientation[4];
+                            currentSegment(6) = currentPoseSegment.m_orientation[3];
                         }
                         
                         for (auto delegate : m_delegates) {

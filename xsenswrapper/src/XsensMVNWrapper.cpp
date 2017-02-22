@@ -101,7 +101,7 @@ namespace yarp {
                     angAcceleration.c3 = newAcceleration[5];
 
                 }
-                
+                m_outputPort.setEnvelope(timestamp);
                 m_outputPort.write();
             }
 

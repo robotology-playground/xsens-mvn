@@ -12,7 +12,8 @@
 
 #include <yarp/dev/DeviceDriver.h>
 #include <yarp/dev/PreciselyTimed.h>
-#include <yarp/dev/IHumanSkeleton.h>
+#include <yarp/dev/IFrameProvider.h>
+#include <yarp/dev/IXsensMVNInterface.h>
 
 #include <yarp/sig/Vector.h>
 
@@ -28,7 +29,8 @@ class XsensMVN;
 
 class yarp::dev::XsensMVN : public yarp::dev::DeviceDriver,
                             public yarp::dev::IPreciselyTimed,
-                            public yarp::dev::IHumanSkeleton
+                            public yarp::experimental::dev::IFrameProvider,
+                            public yarp::experimental::dev::IXsensMVNInterface
 {
 private:
     // Prevent copy 
@@ -52,15 +54,20 @@ public:
     // IPreciselyTimed interface
     virtual yarp::os::Stamp getLastInputStamp();
 
-    // IHumanSkeleton interface
-    virtual unsigned getSegmentCount() const;
-    virtual std::string segmentNameAtIndex(unsigned segmentIndex) const;
-    virtual std::vector<std::string> segmentNames() const;
-    virtual int segmentIndexForName(const std::string& name) const;
+    // IFrameProvider interface
+    virtual std::vector<yarp::experimental::dev::FrameReference> frames();
 
+    virtual yarp::experimental::dev::IFrameProviderStatus getFramePoses(std::vector<yarp::sig::Vector>& segmentPoses);
+    virtual yarp::experimental::dev::IFrameProviderStatus getFrameVelocities(std::vector<yarp::sig::Vector>& segmentVelocities);
+    virtual yarp::experimental::dev::IFrameProviderStatus getFrameAccelerations(std::vector<yarp::sig::Vector>& segmentAccelerations);
+    virtual yarp::experimental::dev::IFrameProviderStatus getFrameInformation(std::vector<yarp::sig::Vector>& segmentPoses,
+                                                     std::vector<yarp::sig::Vector>& segmentVelocities,
+                                                     std::vector<yarp::sig::Vector>& segmentAccelerations);
+
+    // IXsensMVNInterface interface
     virtual bool setBodyDimensions(const std::map<std::string, double>& dimensions);
     virtual bool setBodyDimension(const std::string& bodyPart, const double dimension);
-    virtual std::map<std::string, double> bodyDimensions() const;
+    virtual std::map<std::string, double> bodyDimensions();
 
     virtual bool calibrate(const std::string &calibrationType = "");
     virtual bool abortCalibration();
@@ -68,15 +75,8 @@ public:
     virtual bool startAcquisition();
     virtual bool stopAcquisition();
 
-    virtual bool getSegmentPoses(std::vector<yarp::sig::Vector>& segmentPoses);
-    virtual bool getSegmentVelocities(std::vector<yarp::sig::Vector>& segmentVelocities);
-    virtual bool getSegmentAccelerations(std::vector<yarp::sig::Vector>& segmentAccelerations);
-    virtual bool getSegmentInformation(std::vector<yarp::sig::Vector>& segmentPoses,
-        std::vector<yarp::sig::Vector>& segmentVelocities,
-        std::vector<yarp::sig::Vector>& segmentAccelerations);
 };
 
 
 
 #endif //YARP_XSENSMVN_H
-

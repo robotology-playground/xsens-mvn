@@ -1,5 +1,10 @@
 namespace yarp xsens
 
+struct FrameReferece {
+    1: string frameReference;
+    2: string frameName;
+}
+
 /**
  * Methods definition for the XsensDriver Wrapper service
  */
@@ -58,7 +63,7 @@ service XsensDriverService {
      * one used to output the data
      * @return the list of segment names
      */
-    list<string> segments();
+    list<FrameReferece> segments();
     
     /** returns the body dimensions currently used in the Xsens suit
      *

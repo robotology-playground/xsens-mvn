@@ -102,6 +102,7 @@ namespace xsens {
 
     bool XsensMVNCalibrator::calibrateWithType(std::string calibrationType, int maxTrials)
     {
+        std::lock_guard<std::mutex> duplicateCalibrationGuard(m_calibrationMutex);
         //Check if body dimensions are set
         yInfo() << __FILE__ << ":" << __LINE__;
         std::map<std::string, double> dimensions = bodyDimensions();
@@ -145,7 +146,7 @@ namespace xsens {
                                 currentSegment(i) = currentPoseSegment.m_position[i];
                                 currentSegment(3 + i) = currentPoseSegment.m_orientation[i];
                             }
-                            currentSegment(6) = currentPoseSegment.m_orientation[4];
+                            currentSegment(6) = currentPoseSegment.m_orientation[3];
                         }
                         
                         for (auto delegate : m_delegates) {

@@ -35,6 +35,7 @@ class XmeContol;
 
 class xsens::XsensMVNCalibratorDelegate {
 public:
+    virtual ~XsensMVNCalibratorDelegate() {}
     virtual void calibratorHasReceivedNewCalibrationPose(const xsens::XsensMVNCalibrator* const sender, std::vector<yarp::sig::Vector> newPose) = 0;
 };
 
@@ -52,6 +53,7 @@ class xsens::XsensMVNCalibrator : public XmeCallback {
 
     XmeControl &m_suitsConnector;
 
+    std::mutex m_calibrationMutex;
     std::mutex m_syncMutex;
     std::condition_variable m_calibrationSynchronizer;
 

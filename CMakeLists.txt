@@ -18,6 +18,9 @@ endif()
 find_package(YARP REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH})
 
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
 include(YarpPlugin)
 include(YarpInstallationHelpers)
 set(YARP_FORCE_DYNAMIC_PLUGINS TRUE)
@@ -26,16 +29,11 @@ set(YARP_FORCE_DYNAMIC_PLUGINS TRUE)
 
 # Compile the plugins by default
 set(COMPILE_BY_DEFAULT ON)
+option(BUILD_SHARED_LIBS ON)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-add_library(yarp_experimental STATIC   
-            ${xsens-mvn_SOURCE_DIR}/yarp/include/yarp/dev/IHumanSkeleton.h
-            ${xsens-mvn_SOURCE_DIR}/yarp/IHumanSkeleton.cpp)
-
-target_link_libraries(yarp_experimental YARP::YARP_dev)
-target_include_directories(yarp_experimental SYSTEM PUBLIC yarp/include ${YARP_INCLUDE_DIRS})
-target_include_directories(yarp_experimental PRIVATE yarp/include/yarp/dev)
+add_subdirectory(yarp)
 
 find_package(XsensXME)
 

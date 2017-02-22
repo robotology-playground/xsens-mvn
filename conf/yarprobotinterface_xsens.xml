@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<robot name="xsens">
+
+    <device type="xsens_mvn" name="XsensSuit">
+		<param name="license-dir">"C:\\Program Files\\Xsens\\MVN SDK 4.2\\SDK Files\\rundeps"</param>
+		<param name="suit-config">Human/FullBody</param>
+    </device>
+	
+    <device name="xsens_wrapper" type="xsens_mvn_wrapper">
+        <param name="period">100</param>
+		<param name="name">/xsens</param>
+        
+        <action phase="startup" level="5" type="attach">
+            <paramlist name="networks">
+                 <elem name="XsensDriver">  XsensSuit </elem>
+            </paramlist>
+        </action>
+
+        <action phase="shutdown" level="5" type="detach" />
+    </device>
+	
+  
+</robot> 

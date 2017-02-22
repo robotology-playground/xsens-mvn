@@ -19,7 +19,7 @@ namespace yarp {
     }
 }
 
-class yarp::dev::XsensMVNWrapper : public yarp::dev::PolyDriver,
+class yarp::dev::XsensMVNWrapper : public yarp::dev::DeviceDriver,
     public yarp::dev::IPreciselyTimed,
     public yarp::dev::IWrapper,
     public yarp::dev::IMultipleWrapper

@@ -165,7 +165,6 @@ namespace yarp {
         {
             assert(m_pimpl);
             detachAll();
-            m_pimpl->stop();
             delete m_pimpl;
             m_pimpl = 0;
         }
@@ -202,6 +201,7 @@ namespace yarp {
         {
             assert(m_pimpl);
             yInfo() << __FILE__ << ":" << __LINE__;
+            m_pimpl->stop();
             m_pimpl->m_outputPort.close();
             m_pimpl->m_commandPort.close();
             yInfo() << __FILE__ << ":" << __LINE__;

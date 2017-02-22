@@ -40,3 +40,4 @@ find_package(XsensXME)
 
 add_subdirectory(xsensdriver)
 add_subdirectory(xsenswrapper)
+add_subdirectory(xsensremote)

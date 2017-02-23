@@ -15,8 +15,17 @@
 namespace yarp {
     namespace dev {
         class XsensMVNWrapper;
-        class IHumanSkeleton;
     }
+
+    namespace os {
+        template <typename type>
+        class BufferedPort;
+        class Port;
+    }
+}
+
+namespace xsens {
+    class XsensSegmentsFrame;
 }
 
 class yarp::dev::XsensMVNWrapper : public yarp::dev::DeviceDriver,
@@ -27,6 +36,12 @@ class yarp::dev::XsensMVNWrapper : public yarp::dev::DeviceDriver,
 
     class XsensMVNWrapperPrivate;
     XsensMVNWrapperPrivate* m_pimpl;
+    friend class XsensMVNWrapperPrivate;
+    
+
+    //explicitly define the ports we open
+    yarp::os::BufferedPort<xsens::XsensSegmentsFrame>* m_outputPort;
+    yarp::os::Port* m_commandPort; //this implements the RPC thrift/XsensDriverService service
 
 public:
     XsensMVNWrapper();

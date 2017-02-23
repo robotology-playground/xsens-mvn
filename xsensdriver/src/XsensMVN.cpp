@@ -65,38 +65,10 @@ yarp::os::Stamp yarp::dev::XsensMVN::getLastInputStamp()
     return timestamp;
 }
 
-unsigned yarp::dev::XsensMVN::getSegmentCount() const
-{
-    assert(m_pimpl);
-    return m_pimpl->segmentNames().size();
-}
-
-std::string yarp::dev::XsensMVN::segmentNameAtIndex(unsigned segmentIndex) const
-{
-    assert(m_pimpl);
-    std::vector<std::string> segments = m_pimpl->segmentNames();
-    if (segmentIndex >= segments.size()) return "";
-    return segments[segmentIndex];
-}
-
-std::vector<std::string> yarp::dev::XsensMVN::segmentNames() const
+std::vector<yarp::experimental::dev::FrameReference> yarp::dev::XsensMVN::frames() const
 {
     assert(m_pimpl);
     return m_pimpl->segmentNames();
-}
-
-int yarp::dev::XsensMVN::segmentIndexForName(const std::string& name) const
-{
-    assert(m_pimpl);
-    std::vector<std::string> segments = m_pimpl->segmentNames();
-    int index = 0;
-    for (auto segment : segments) {
-        if (segment == name) {
-            return index;
-        }
-        index++;
-    }
-    return -1;
 }
 
 bool yarp::dev::XsensMVN::setBodyDimensions(const std::map<std::string, double>& dimensions)
@@ -142,28 +114,28 @@ bool yarp::dev::XsensMVN::stopAcquisition()
     return m_pimpl->stopAcquisition();
 }
 
-bool yarp::dev::XsensMVN::getSegmentPoses(std::vector<yarp::sig::Vector>& segmentPoses)
+bool yarp::dev::XsensMVN::getFramePoses(std::vector<yarp::sig::Vector>& segmentPoses)
 {
     //create dummy vectors
     std::vector<yarp::sig::Vector> dummyVelocities, dummyAccelerations;
-    return getSegmentInformation(segmentPoses, dummyVelocities, dummyAccelerations);
+    return getFrameInformation(segmentPoses, dummyVelocities, dummyAccelerations);
 }
 
-bool yarp::dev::XsensMVN::getSegmentVelocities(std::vector<yarp::sig::Vector>& segmentVelocities)
+bool yarp::dev::XsensMVN::getFrameVelocities(std::vector<yarp::sig::Vector>& segmentVelocities)
 {
     //create dummy vectors
     std::vector<yarp::sig::Vector> dummyPoses, dummyAccelerations;
-    return getSegmentInformation(dummyPoses, segmentVelocities, dummyAccelerations);
+    return getFrameInformation(dummyPoses, segmentVelocities, dummyAccelerations);
 }
 
-bool yarp::dev::XsensMVN::getSegmentAccelerations(std::vector<yarp::sig::Vector>& segmentAccelerations)
+bool yarp::dev::XsensMVN::getFrameAccelerations(std::vector<yarp::sig::Vector>& segmentAccelerations)
 {
     //create dummy vectors
     std::vector<yarp::sig::Vector> dummyPoses, dummyVelocities;
-    return getSegmentInformation(dummyPoses, dummyVelocities, segmentAccelerations);
+    return getFrameInformation(dummyPoses, dummyVelocities, segmentAccelerations);
 }
 
-bool yarp::dev::XsensMVN::getSegmentInformation(std::vector<yarp::sig::Vector>& segmentPoses,
+bool yarp::dev::XsensMVN::getFrameInformation(std::vector<yarp::sig::Vector>& segmentPoses,
     std::vector<yarp::sig::Vector>& segmentVelocities,
     std::vector<yarp::sig::Vector>& segmentAccelerations)
 {

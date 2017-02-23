@@ -49,6 +49,7 @@ bool yarp::dev::XsensMVN::XsensMVNPrivate::init(yarp::os::Searchable &config)
     if (GetTempPath(MAX_PATH, tempFolder) == 0) {
         yWarning("Failed to retrieve temporary folder");
     }
+
     std::wstring wideCharString(tempFolder);
 
     std::string tempFolderConverted(wideCharString.begin(), wideCharString.end());
@@ -88,6 +89,8 @@ bool yarp::dev::XsensMVN::XsensMVNPrivate::init(yarp::os::Searchable &config)
         return false;
     }
     yInfo("Using MVN configuration %s", configuration.c_str());
+
+    yarp::os::ConstString referenceFrame = config.check("reference-frame", yarp::os::Value("xsens_world"), "checking absolute reference frame name").asString();
 
     //I have some problems with custom durations. Use the default milliseconds
     int scanTimeout = static_cast<int>(config.check("scanTimeout", yarp::os::Value(10.0), "scan timeout before failing (in seconds). -1 for disabling timeout").asDouble() * 1000.0);
@@ -156,10 +159,10 @@ bool yarp::dev::XsensMVN::XsensMVNPrivate::init(yarp::os::Searchable &config)
     resizeVectorToOuterAndInnerSize(m_lastSegmentAccelerationRead, m_connection->segmentCount(), 6);
 
     yInfo("--- Body model Segments ---");
-    std::vector<std::string> segments = segmentNames();
+    std::vector<yarp::experimental::dev::FrameReference> segments = segmentNames();
     //Segment ID is 1-based, segment Index = segmentID - 1 (i.e. 0-based)
     for (unsigned index = 0; index < segments.size(); ++index) {
-        yInfo("[%d]%s", index + 1, segments[index].c_str());
+        yInfo("[%d]%s_H_%s", index + 1, segments[index].frameReference.c_str(), segments[index].frameName.c_str());
     }
     yInfo("--------------------------------");
 
@@ -197,15 +200,16 @@ bool yarp::dev::XsensMVN::XsensMVNPrivate::fini()
     return true;
 }
 
-std::vector<std::string> yarp::dev::XsensMVN::XsensMVNPrivate::segmentNames() const
+std::vector<yarp::experimental::dev::FrameReference> yarp::dev::XsensMVN::XsensMVNPrivate::segmentNames() const
 {
-    if (!m_connection) return std::vector<std::string>();
+    if (!m_connection || m_connection->segmentCount() < 0) return std::vector<yarp::experimental::dev::FrameReference>();
 
-    std::vector<std::string> segments;
+    std::vector<yarp::experimental::dev::FrameReference> segments;
     segments.reserve(m_connection->segmentCount());
     //Segment ID is 1-based, segment Index = segmentID - 1 (i.e. 0-based)
-    for (unsigned index = 0; index < m_connection->segmentCount(); ++index) {
-        segments.push_back(m_connection->segmentName(index + 1).c_str());
+    for (unsigned index = 0; index < static_cast<unsigned>(m_connection->segmentCount()); ++index) {
+        yarp::experimental::dev::FrameReference frameInfo = { m_referenceFrame, m_connection->segmentName(index + 1).c_str() };
+        segments.push_back(frameInfo);
     }
     return segments;
 }
@@ -320,13 +324,14 @@ void yarp::dev::XsensMVN::XsensMVNPrivate::processNewFrame()
                     segmentVelocity(i) = segmentData.m_velocity[i];
                     segmentAcceleration(i) = segmentData.m_acceleration[i];
                     //angular part for velocity and acceleration
-                    //TODO: check quaternion format of Xsens
-                    segmentPosition(3 + i) = segmentData.m_orientation[i];
                     segmentVelocity(3 + i) = segmentData.m_angularVelocity[i];
                     segmentAcceleration(i) = segmentData.m_angularAcceleration[i];
                 }
-                //last element of orientation
-                segmentPosition(6) = segmentData.m_orientation[3];
+                // Do the quaternion explicitly to avoid issues in format
+                segmentPosition(3) = segmentData.m_orientation.w();
+                segmentPosition(4) = segmentData.m_orientation.x();
+                segmentPosition(5) = segmentData.m_orientation.y();
+                segmentPosition(6) = segmentData.m_orientation.z();
             }
         }
     }

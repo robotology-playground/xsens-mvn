@@ -46,6 +46,8 @@ class yarp::dev::XsensMVN::XsensMVNPrivate : public XmeCallback,
     XmeLicense m_license;
     XmeControl *m_connection;
 
+    std::string m_referenceFrame;
+
     xsens::XsensMVNCalibrator *m_calibrator;
     std::string m_defaultCalibrationType;
 
@@ -94,7 +96,7 @@ public:
     bool fini();
 
     //Information on the available hardware/model/etc
-    std::vector<std::string> segmentNames() const;
+    std::vector<yarp::experimental::dev::FrameReference> segmentNames() const;
 
     bool startAcquisition();
     bool stopAcquisition();

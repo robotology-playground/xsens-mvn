@@ -29,13 +29,25 @@ set(COMPILE_BY_DEFAULT ON)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-add_library(yarp_experimental STATIC   
-            ${xsens-mvn_SOURCE_DIR}/yarp/include/yarp/dev/IHumanSkeleton.h
-            ${xsens-mvn_SOURCE_DIR}/yarp/IHumanSkeleton.cpp)
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+add_library(yarp_experimental SHARED   
+            ${xsens-mvn_SOURCE_DIR}/yarp/include/yarp/dev/IFrameProvider.h
+            ${xsens-mvn_SOURCE_DIR}/yarp/include/yarp/dev/IXsensMVNInterface.h
+            ${xsens-mvn_SOURCE_DIR}/yarp/IFrameProvider.cpp
+            ${xsens-mvn_SOURCE_DIR}/yarp/IXsensMVNInterface.cpp)
 
 target_link_libraries(yarp_experimental YARP::YARP_dev)
-target_include_directories(yarp_experimental SYSTEM PUBLIC yarp/include ${YARP_INCLUDE_DIRS})
+target_include_directories(yarp_experimental SYSTEM PUBLIC ${YARP_INCLUDE_DIRS})
+target_include_directories(yarp_experimental PUBLIC yarp/include)
 target_include_directories(yarp_experimental PRIVATE yarp/include/yarp/dev)
+
+install(TARGETS yarp_experimental
+        EXPORT YARP
+        COMPONENT runtime
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/yarp/dev)
 
 find_package(XsensXME)
 

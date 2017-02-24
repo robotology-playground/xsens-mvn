@@ -46,6 +46,7 @@ namespace yarp {
             std::vector<yarp::sig::Vector> m_poses;
             std::vector<yarp::sig::Vector> m_velocities;
             std::vector<yarp::sig::Vector> m_accelerations;
+            yarp::experimental::dev::IFrameProviderStatus m_status;
             yarp::os::Stamp m_timestamp;
 
             unsigned m_segmentsCount;
@@ -54,8 +55,11 @@ namespace yarp {
             {
                 yarp::os::LockGuard guard(m_mutex);
                 //get timestamp
-                //TODO: direi di si ma guarderei cosa fa getEnvelope per evitare casini
                 m_inputPort.getEnvelope(m_timestamp);
+                m_status = static_cast<yarp::experimental::dev::IFrameProviderStatus>(frame.status);
+
+                //if status is != OK we should not have any data
+                if (m_status != yarp::experimental::dev::IFrameProviderStatusOK) return;
 
                 for (unsigned seg = 0; seg < m_segmentsCount; ++seg) {
                     xsens::Vector3 &position = frame.segmentsData[seg].position;
@@ -110,6 +114,8 @@ namespace yarp {
         bool XsensMVNRemote::open(yarp::os::Searchable &config)
         {
             assert(m_pimpl);
+            yarp::os::LockGuard guard(m_pimpl->m_mutex);
+
             yarp::os::ConstString deviceName = config.check("local", yarp::os::Value("/xsens_remote"), "Checking device name").asString();
             if (deviceName.empty() || deviceName.at(0) != '/') {
                 yError("Invalid device name '%s'", deviceName.c_str());
@@ -173,6 +179,7 @@ namespace yarp {
         bool XsensMVNRemote::close()
         {
             assert(m_pimpl);
+            yarp::os::LockGuard guard(m_pimpl->m_mutex);
 
             m_pimpl->m_inputPort.disableCallback();
 
@@ -195,7 +202,7 @@ namespace yarp {
 
 
         // IFrameProvider interface
-        std::vector<yarp::experimental::dev::FrameReference> XsensMVNRemote::frames() const
+        std::vector<yarp::experimental::dev::FrameReference> XsensMVNRemote::frames()
         {
             assert(m_pimpl);
             std::vector<xsens::FrameReferece> frames = m_pimpl->m_xsensService.segments();
@@ -212,32 +219,32 @@ namespace yarp {
         }
 
         // Get Data
-        bool XsensMVNRemote::getFramePoses(std::vector<yarp::sig::Vector>& segmentPoses)
+        yarp::experimental::dev::IFrameProviderStatus XsensMVNRemote::getFramePoses(std::vector<yarp::sig::Vector>& segmentPoses)
         {
             assert(m_pimpl);
             yarp::os::LockGuard guard(m_pimpl->m_mutex);
             segmentPoses = m_pimpl->m_poses;
-            return true;
+            return m_pimpl->m_status;
 
         }
 
-        bool XsensMVNRemote::getFrameVelocities(std::vector<yarp::sig::Vector>& segmentVelocities)
+        yarp::experimental::dev::IFrameProviderStatus XsensMVNRemote::getFrameVelocities(std::vector<yarp::sig::Vector>& segmentVelocities)
         {
             assert(m_pimpl);
             yarp::os::LockGuard guard(m_pimpl->m_mutex);
             segmentVelocities = m_pimpl->m_velocities;
-            return true;
+            return m_pimpl->m_status;
         }
 
-        bool XsensMVNRemote::getFrameAccelerations(std::vector<yarp::sig::Vector>& segmentAccelerations)
+        yarp::experimental::dev::IFrameProviderStatus XsensMVNRemote::getFrameAccelerations(std::vector<yarp::sig::Vector>& segmentAccelerations)
         {
             assert(m_pimpl);
             yarp::os::LockGuard guard(m_pimpl->m_mutex);
             segmentAccelerations = m_pimpl->m_accelerations;
-            return true;
+            return m_pimpl->m_status;
         }
 
-        bool XsensMVNRemote::getFrameInformation(std::vector<yarp::sig::Vector>& segmentPoses,
+        yarp::experimental::dev::IFrameProviderStatus XsensMVNRemote::getFrameInformation(std::vector<yarp::sig::Vector>& segmentPoses,
                                                  std::vector<yarp::sig::Vector>& segmentVelocities,
                                                  std::vector<yarp::sig::Vector>& segmentAccelerations)
         {
@@ -246,7 +253,7 @@ namespace yarp {
             segmentPoses = m_pimpl->m_poses;
             segmentVelocities = m_pimpl->m_velocities;
             segmentAccelerations = m_pimpl->m_accelerations;
-            return true;
+            return m_pimpl->m_status;
         }
         
         // IXsensMVNInterface interface
@@ -262,7 +269,7 @@ namespace yarp {
             return m_pimpl->m_xsensService.setBodyDimension(bodyPart, dimension);
         }
 
-        std::map<std::string, double> XsensMVNRemote::bodyDimensions() const
+        std::map<std::string, double> XsensMVNRemote::bodyDimensions()
         {
             assert(m_pimpl);
             return m_pimpl->m_xsensService.bodyDimensions();
@@ -298,8 +305,6 @@ namespace yarp {
             m_pimpl->m_xsensService.stopAcquisition();
             return true;
         }
-
-
 
     }
 }

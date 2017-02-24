@@ -41,6 +41,13 @@ struct XsensSegmentData {
     6:  Vector3 angularAcceleration;
 }
 
+enum XsensStatus {
+    OK = 0,
+    ERROR = 1,
+    NO_DATA = 2,
+    TIMEOUT = 4
+}
+
 /**
  * Data characterizing sensor data.
  * It is composed of orientation in quaternion,
@@ -60,17 +67,15 @@ struct XsensSensorData {
 /** Frame output from Xsens with segments data
  */
 struct XsensSegmentsFrame {
-    /** absolute time in seconds */
-    1: double time;
+    1: required XsensStatus status;
     /** segments data */
-    2: list<XsensSegmentData> segmentsData;
+    2: optional list<XsensSegmentData> segmentsData;
 }
 
 /** Frame output from Xsens with sensors raw data
  */
 struct XsensSensorsFrame {
-    /** absolute time in seconds */
-    1: double time;
+    1: required XsensStatus status;
     /** sensors data */
-    2: list<XsensSensorData> sensorsData
+    2: optional list<XsensSensorData> sensorsData
 }

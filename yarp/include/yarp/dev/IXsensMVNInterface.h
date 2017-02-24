@@ -31,7 +31,7 @@ public:
     //Configuration
     virtual bool setBodyDimensions(const std::map<std::string, double>& dimensions) = 0;
     virtual bool setBodyDimension(const std::string& bodyPart, const double dimension) = 0;
-    virtual std::map<std::string, double> bodyDimensions() const = 0;
+    virtual std::map<std::string, double> bodyDimensions() = 0;
 
     // Calibration methods
     virtual bool calibrate(const std::string &calibrationType = "") = 0;

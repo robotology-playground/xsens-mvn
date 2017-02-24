@@ -102,19 +102,17 @@ namespace xsens {
 
     bool XsensMVNCalibrator::calibrateWithType(std::string calibrationType, int maxTrials)
     {
+        std::lock_guard<std::mutex> duplicateCalibrationGuard(m_calibrationMutex);
         //Check if body dimensions are set
-        yInfo() << __FILE__ << ":" << __LINE__;
         std::map<std::string, double> dimensions = bodyDimensions();
         if (dimensions.empty()) {
             yError("Calibrator: Set body dimensions first");
         }
 
-        yInfo() << __FILE__ << ":" << __LINE__;
         m_suitsConnector.initializeCalibration(calibrationType);
         XsIntArray phases = m_suitsConnector.calibrationPhaseList();
 
         unsigned trial = 0;
-        yInfo() << __FILE__ << ":" << __LINE__;
         while(true) {
 
             //From Xsens support:

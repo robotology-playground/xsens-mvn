@@ -18,6 +18,9 @@ endif()
 find_package(YARP REQUIRED)
 list(APPEND CMAKE_MODULE_PATH ${YARP_MODULE_PATH})
 
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
 include(YarpPlugin)
 include(YarpInstallationHelpers)
 set(YARP_FORCE_DYNAMIC_PLUGINS TRUE)
@@ -26,28 +29,11 @@ set(YARP_FORCE_DYNAMIC_PLUGINS TRUE)
 
 # Compile the plugins by default
 set(COMPILE_BY_DEFAULT ON)
+option(BUILD_SHARED_LIBS ON)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-add_library(yarp_experimental SHARED   
-            ${xsens-mvn_SOURCE_DIR}/yarp/include/yarp/dev/IFrameProvider.h
-            ${xsens-mvn_SOURCE_DIR}/yarp/include/yarp/dev/IXsensMVNInterface.h
-            ${xsens-mvn_SOURCE_DIR}/yarp/IFrameProvider.cpp
-            ${xsens-mvn_SOURCE_DIR}/yarp/IXsensMVNInterface.cpp)
-
-target_link_libraries(yarp_experimental YARP::YARP_dev)
-target_include_directories(yarp_experimental SYSTEM PUBLIC ${YARP_INCLUDE_DIRS})
-target_include_directories(yarp_experimental PUBLIC yarp/include)
-target_include_directories(yarp_experimental PRIVATE yarp/include/yarp/dev)
-
-install(TARGETS yarp_experimental
-        EXPORT YARP
-        COMPONENT runtime
-        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/yarp/dev)
+add_subdirectory(yarp)
 
 find_package(XsensXME)
 

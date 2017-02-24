@@ -22,8 +22,8 @@ namespace yarp {
 
             IFrameProvider::~IFrameProvider() {}
             
-            unsigned IFrameProvider::getFrameCount() const { return frames().size(); }
-            FrameReference IFrameProvider::frameAtIndex(unsigned frameIndex) const
+            unsigned IFrameProvider::getFrameCount() { return frames().size(); }
+            FrameReference IFrameProvider::frameAtIndex(unsigned frameIndex)
             {
                 if (frameIndex >= getFrameCount()) {
                     FrameReference dummy = { "", "" };
@@ -32,7 +32,7 @@ namespace yarp {
                 return frames()[frameIndex];
             }
             
-            int IFrameProvider::frameIndexForFrame(const FrameReference& frame) const
+            int IFrameProvider::frameIndexForFrame(const FrameReference& frame)
             {
                 std::vector<FrameReference> frames = this->frames();
                 std::vector<FrameReference>::iterator found = std::find(frames.begin(), frames.end(), frame);
@@ -40,13 +40,19 @@ namespace yarp {
                 return std::distance(frames.begin(), found);
             }
 
-            bool IFrameProvider::getFrameInformation(std::vector<yarp::sig::Vector>& segmentPoses,
-                std::vector<yarp::sig::Vector>& segmentVelocities,
-                std::vector<yarp::sig::Vector>& segmentAccelerations)
+            IFrameProviderStatus IFrameProvider::getFrameInformation(std::vector<yarp::sig::Vector>& segmentPoses,
+                                                                     std::vector<yarp::sig::Vector>& segmentVelocities,
+                                                                     std::vector<yarp::sig::Vector>& segmentAccelerations)
             {
-                return getFramePoses(segmentPoses)
-                    && getFrameVelocities(segmentVelocities)
-                    && getFrameAccelerations(segmentAccelerations);
+                IFrameProviderStatus status = getFramePoses(segmentPoses);
+                if (status != IFrameProviderStatusOK) {
+                    return status;
+                }
+                status = getFrameVelocities(segmentVelocities);
+                if (status != IFrameProviderStatusOK) {
+                    return status;
+                }
+                return getFrameAccelerations(segmentAccelerations);
             }
 
         }

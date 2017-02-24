@@ -6,6 +6,7 @@
 		<param name="suit-config">Human/FullBody</param>
     </device>
 	
+  
     <device name="xsens_wrapper" type="xsens_mvn_wrapper">
         <param name="period">100</param>
 		<param name="name">/xsens</param>

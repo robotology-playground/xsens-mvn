@@ -17,6 +17,14 @@ namespace yarp {
         namespace dev {
             class IFrameProvider;
             struct FrameReference;
+
+            enum IFrameProviderStatus {
+                IFrameProviderStatusOK = 0,
+                IFrameProviderStatusError = 1,
+                IFrameProviderStatusNoData = 1 << 1,
+                IFrameProviderStatusTimeout = 1 << 2,
+                };
+
         }
     }
 
@@ -34,7 +42,6 @@ struct yarp::experimental::dev::FrameReference {
     bool operator==(const FrameReference&) const;
 };
 
-
 /**
  * Interface representing a provider of frames (and possibly their velocity and acceleration)
  * \since 2.3.69
@@ -45,10 +52,10 @@ public:
 
     virtual ~IFrameProvider();
 
-    virtual unsigned getFrameCount() const;
-    virtual FrameReference frameAtIndex(unsigned frameIndex) const;
-    virtual std::vector<FrameReference> frames() const = 0;
-    virtual int frameIndexForFrame(const FrameReference& frame) const;
+    virtual unsigned getFrameCount();
+    virtual FrameReference frameAtIndex(unsigned frameIndex);
+    virtual std::vector<FrameReference> frames() = 0;
+    virtual int frameIndexForFrame(const FrameReference& frame);
 
     /**
      * Retrieve the last read poses of all frames
@@ -63,13 +70,13 @@ public:
      * \see getFrameInformation
      * \see frames
      */
-    virtual bool getFramePoses(std::vector<yarp::sig::Vector>& segmentPoses) = 0;
-    virtual bool getFrameVelocities(std::vector<yarp::sig::Vector>& segmentVelocities) = 0;
-    virtual bool getFrameAccelerations(std::vector<yarp::sig::Vector>& segmentAccelerations) = 0;
-    virtual bool getFrameInformation(std::vector<yarp::sig::Vector>& segmentPoses,
-                                     std::vector<yarp::sig::Vector>& segmentVelocities,
-                                     std::vector<yarp::sig::Vector>& segmentAccelerations);
-   
+    virtual yarp::experimental::dev::IFrameProviderStatus getFramePoses(std::vector<yarp::sig::Vector>& segmentPoses) = 0;
+    virtual yarp::experimental::dev::IFrameProviderStatus getFrameVelocities(std::vector<yarp::sig::Vector>& segmentVelocities) = 0;
+    virtual yarp::experimental::dev::IFrameProviderStatus getFrameAccelerations(std::vector<yarp::sig::Vector>& segmentAccelerations) = 0;
+    virtual yarp::experimental::dev::IFrameProviderStatus getFrameInformation(std::vector<yarp::sig::Vector>& segmentPoses,
+                                                     std::vector<yarp::sig::Vector>& segmentVelocities,
+                                                     std::vector<yarp::sig::Vector>& segmentAccelerations);
+    
 };
 
 

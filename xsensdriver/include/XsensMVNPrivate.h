@@ -46,12 +46,14 @@ class yarp::dev::XsensMVN::XsensMVNPrivate : public XmeCallback,
     XmeLicense m_license;
     XmeControl *m_connection;
 
+    mutable std::recursive_mutex m_objectMutex;
+
     std::string m_referenceFrame;
 
     xsens::XsensMVNCalibrator *m_calibrator;
     std::string m_defaultCalibrationType;
 
-    std::mutex m_mutex;
+    std::mutex m_initializationMutex;
     std::condition_variable m_initializationVariable;
 
     //process data
@@ -60,7 +62,7 @@ class yarp::dev::XsensMVN::XsensMVNPrivate : public XmeCallback,
         XmeSensorSampleArray sensorsData;
     };
 
-    std::mutex m_dataMutex;
+    mutable std::mutex m_dataMutex;
     std::vector<yarp::sig::Vector> m_lastSegmentPosesRead;
     std::vector<yarp::sig::Vector> m_lastSegmentVelocitiesRead;
     std::vector<yarp::sig::Vector> m_lastSegmentAccelerationRead;
@@ -81,6 +83,8 @@ class yarp::dev::XsensMVN::XsensMVNPrivate : public XmeCallback,
 
     //hardware scan
     bool m_hardwareFound;
+
+    yarp::experimental::dev::IFrameProviderStatus m_driverStatus;
 
 
     XsensMVNPrivate(const XsensMVNPrivate&) = delete;
@@ -108,23 +112,22 @@ public:
     bool abortCalibration();
 
     //Get data
-    bool getLastSegmentReadTimestamp(yarp::os::Stamp& timestamp);
-    bool getLastSegmentInformation(yarp::os::Stamp& timestamp,
-        std::vector<yarp::sig::Vector>& lastPoses,
-        std::vector<yarp::sig::Vector>& lastVelocities,
-        std::vector<yarp::sig::Vector>& lastAccelerations);
+    yarp::experimental::dev::IFrameProviderStatus getLastSegmentReadTimestamp(yarp::os::Stamp& timestamp);
+    yarp::experimental::dev::IFrameProviderStatus getLastSegmentInformation(yarp::os::Stamp& timestamp,
+                                                   std::vector<yarp::sig::Vector>& lastPoses,
+                                                   std::vector<yarp::sig::Vector>& lastVelocities,
+                                                   std::vector<yarp::sig::Vector>& lastAccelerations);
 
 
     // callbacks
     virtual void onHardwareReady(XmeControl* dev);
     virtual void onHardwareError(XmeControl* dev);
+    virtual void onHardwareDisconnected(XmeControl*);
     virtual void onPoseReady(XmeControl* dev);
 
     //Calibrator callback
     virtual void calibratorHasReceivedNewCalibrationPose(const xsens::XsensMVNCalibrator* const sender, std::vector<yarp::sig::Vector> newPose);
 
 };
-
-
 
 #endif //XSENSMVNPRIVATE_h

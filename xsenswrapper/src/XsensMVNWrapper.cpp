@@ -45,6 +45,7 @@ namespace yarp {
             , m_frameCount(0) {}
 
             virtual ~XsensMVNWrapperPrivate() {}
+
             yarp::os::Mutex m_mutex;
             yarp::experimental::dev::IFrameProvider* m_frameProvider;
             yarp::experimental::dev::IXsensMVNInterface* m_xsensInterface;
@@ -63,13 +64,21 @@ namespace yarp {
                 //read from device
                 yarp::os::LockGuard guard(m_mutex);
 
+                yarp::experimental::dev::IFrameProviderStatus frameStatus = m_frameProvider->getFrameInformation(m_poses, m_velocities, m_accelerations);
+                
+                xsens::XsensSegmentsFrame &frame = m_wrapper.m_outputPort->prepare();
                 yarp::os::Stamp timestamp = m_timedDriver->getLastInputStamp();
-                if (!m_frameProvider->getFrameInformation(m_poses, m_velocities, m_accelerations)) {
-                    yError("Reading from Xsens device returned error");
+
+                m_wrapper.m_outputPort->setEnvelope(timestamp);
+                frame.status = static_cast<xsens::XsensStatus>(frameStatus);
+
+                if (frameStatus != yarp::experimental::dev::IFrameProviderStatusOK) {
+                    // write without data. Only status
+                    m_wrapper.m_outputPort->write();
                     return;
                 }
 
-                xsens::XsensSegmentsFrame &frame = m_wrapper.m_outputPort->prepare();
+                
                 frame.segmentsData.resize(m_frameCount);
                 for (unsigned seg = 0; seg < m_frameCount; ++seg) {
                     xsens::Vector3 &position = frame.segmentsData[seg].position;
@@ -106,7 +115,6 @@ namespace yarp {
                     angAcceleration.z = newAcceleration[5];
 
                 }
-                m_wrapper.m_outputPort->setEnvelope(timestamp);
                 m_wrapper.m_outputPort->write();
             }
 
@@ -122,9 +130,9 @@ namespace yarp {
             virtual bool calibrateWithType(const std::string& calibrationType)
             {
                 if (!m_xsensInterface) return false;
-                resume();
+                //resume();
                 bool result = m_xsensInterface->calibrate(calibrationType);
-                suspend();
+                //suspend();
                 return result;
             }
 
@@ -132,14 +140,14 @@ namespace yarp {
             {
                 if (!m_xsensInterface) return;
                 bool result = m_xsensInterface->startAcquisition();
-                if (result) resume();
+                //if (result) resume();
             }
 
             virtual void stopAcquisition()
             {
                 if (!m_xsensInterface) return;
                 bool result = m_xsensInterface->stopAcquisition();
-                if (result) suspend();
+                //if (result) suspend();
             }
 
             virtual std::vector<xsens::FrameReferece> segments()
@@ -220,14 +228,14 @@ namespace yarp {
             bool result = m_pimpl->start();
             //start in suspend mode
             //We resume only for acquisition
-            m_pimpl->suspend();
+            //m_pimpl->suspend();
             return result;
         }
 
         bool XsensMVNWrapper::close()
         {
             assert(m_pimpl);
-            yInfo() << __FILE__ << ":" << __LINE__;
+
             m_pimpl->stop();
             if (m_outputPort) {
                 m_outputPort->close();
@@ -240,7 +248,6 @@ namespace yarp {
                 m_commandPort = 0;
             }
 
-            yInfo() << __FILE__ << ":" << __LINE__;
             detachAll();
             return true;
         }
@@ -259,19 +266,15 @@ namespace yarp {
             assert(m_pimpl);
             yarp::os::LockGuard guard(m_pimpl->m_mutex);
 
-            yInfo() << __FILE__ << ":" << __LINE__;
             if (!poly 
                 || m_pimpl->m_frameProvider 
                 || m_pimpl->m_xsensInterface) return false;
 
-            yInfo() << __FILE__ << ":" << __LINE__;
             if (!poly->view(m_pimpl->m_frameProvider) || !m_pimpl->m_frameProvider) return false;
             if (!poly->view(m_pimpl->m_xsensInterface) || !m_pimpl->m_xsensInterface) return false;
 
-            yInfo() << __FILE__ << ":" << __LINE__;
             if (!poly->view(m_pimpl->m_timedDriver) || !m_pimpl->m_timedDriver) return false;
 
-            yInfo() << __FILE__ << ":" << __LINE__;
             //resize the vectors
             m_pimpl->m_frameCount = m_pimpl->m_frameProvider->getFrameCount();
             m_pimpl->m_poses.resize(m_pimpl->m_frameCount);
@@ -292,9 +295,8 @@ namespace yarp {
         bool XsensMVNWrapper::detach()
         {
             assert(m_pimpl);
-            yInfo() << __FILE__ << ":" << __LINE__;
             yarp::os::LockGuard guard(m_pimpl->m_mutex);
-            yInfo() << __FILE__ << ":" << __LINE__;
+
             m_pimpl->m_frameProvider = 0;
             m_pimpl->m_xsensInterface = 0;
             m_pimpl->m_timedDriver = 0;

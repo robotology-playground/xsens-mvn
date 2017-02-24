@@ -55,19 +55,19 @@ public:
     virtual yarp::os::Stamp getLastInputStamp();
 
     // IFrameProvider interface
-    virtual std::vector<yarp::experimental::dev::FrameReference> frames() const;
+    virtual std::vector<yarp::experimental::dev::FrameReference> frames();
 
-    virtual bool getFramePoses(std::vector<yarp::sig::Vector>& segmentPoses);
-    virtual bool getFrameVelocities(std::vector<yarp::sig::Vector>& segmentVelocities);
-    virtual bool getFrameAccelerations(std::vector<yarp::sig::Vector>& segmentAccelerations);
-    virtual bool getFrameInformation(std::vector<yarp::sig::Vector>& segmentPoses,
-        std::vector<yarp::sig::Vector>& segmentVelocities,
-        std::vector<yarp::sig::Vector>& segmentAccelerations);
+    virtual yarp::experimental::dev::IFrameProviderStatus getFramePoses(std::vector<yarp::sig::Vector>& segmentPoses);
+    virtual yarp::experimental::dev::IFrameProviderStatus getFrameVelocities(std::vector<yarp::sig::Vector>& segmentVelocities);
+    virtual yarp::experimental::dev::IFrameProviderStatus getFrameAccelerations(std::vector<yarp::sig::Vector>& segmentAccelerations);
+    virtual yarp::experimental::dev::IFrameProviderStatus getFrameInformation(std::vector<yarp::sig::Vector>& segmentPoses,
+                                                     std::vector<yarp::sig::Vector>& segmentVelocities,
+                                                     std::vector<yarp::sig::Vector>& segmentAccelerations);
 
     // IXsensMVNInterface interface
     virtual bool setBodyDimensions(const std::map<std::string, double>& dimensions);
     virtual bool setBodyDimension(const std::string& bodyPart, const double dimension);
-    virtual std::map<std::string, double> bodyDimensions() const;
+    virtual std::map<std::string, double> bodyDimensions();
 
     virtual bool calibrate(const std::string &calibrationType = "");
     virtual bool abortCalibration();
@@ -80,4 +80,3 @@ public:
 
 
 #endif //YARP_XSENSMVN_H
-

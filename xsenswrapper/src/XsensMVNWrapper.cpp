@@ -73,6 +73,8 @@ namespace yarp {
 
                 if (frameStatus != yarp::experimental::dev::IFrameProviderStatusOK) {
                     // write without data. Only status
+                    // I would like to clear the data so as to transmit only the status.
+                    frame.segmentsData.resize(0);
                     m_wrapper.m_outputPort->write();
                     return;
                 }
@@ -234,7 +236,6 @@ namespace yarp {
         bool XsensMVNWrapper::close()
         {
             assert(m_pimpl);
-            yInfo() << __FILE__ << ":" << __LINE__;
             m_pimpl->stop();
             if (m_outputPort) {
                 m_outputPort->close();
@@ -247,7 +248,6 @@ namespace yarp {
                 m_commandPort = 0;
             }
 
-            yInfo() << __FILE__ << ":" << __LINE__;
             detachAll();
             return true;
         }
@@ -266,19 +266,15 @@ namespace yarp {
             assert(m_pimpl);
             yarp::os::LockGuard guard(m_pimpl->m_mutex);
 
-            yInfo() << __FILE__ << ":" << __LINE__;
             if (!poly 
                 || m_pimpl->m_frameProvider 
                 || m_pimpl->m_xsensInterface) return false;
 
-            yInfo() << __FILE__ << ":" << __LINE__;
             if (!poly->view(m_pimpl->m_frameProvider) || !m_pimpl->m_frameProvider) return false;
             if (!poly->view(m_pimpl->m_xsensInterface) || !m_pimpl->m_xsensInterface) return false;
 
-            yInfo() << __FILE__ << ":" << __LINE__;
             if (!poly->view(m_pimpl->m_timedDriver) || !m_pimpl->m_timedDriver) return false;
 
-            yInfo() << __FILE__ << ":" << __LINE__;
             //resize the vectors
             m_pimpl->m_frameCount = m_pimpl->m_frameProvider->getFrameCount();
             m_pimpl->m_poses.resize(m_pimpl->m_frameCount);
@@ -299,9 +295,7 @@ namespace yarp {
         bool XsensMVNWrapper::detach()
         {
             assert(m_pimpl);
-            yInfo() << __FILE__ << ":" << __LINE__;
             yarp::os::LockGuard guard(m_pimpl->m_mutex);
-            yInfo() << __FILE__ << ":" << __LINE__;
             m_pimpl->m_frameProvider = 0;
             m_pimpl->m_xsensInterface = 0;
             m_pimpl->m_timedDriver = 0;

@@ -43,7 +43,7 @@ namespace xsens {
 class yarp::dev::XsensMVN::XsensMVNPrivate : public XmeCallback,
     public xsens::XsensMVNCalibratorDelegate
 {
-    XmeLicense m_license;
+    XmeLicense *m_license;
     XmeControl *m_connection;
 
     mutable std::recursive_mutex m_objectMutex;
@@ -77,7 +77,8 @@ class yarp::dev::XsensMVN::XsensMVNPrivate : public XmeCallback,
     bool m_stopProcessor;
     std::mutex m_processorGuard;
     std::condition_variable m_processorVariable;
-    std::queue<FrameData> m_frameData;
+    FrameData m_lastFrameData;
+    bool m_lastFrameDataWritten;
 
     void processNewFrame();
 

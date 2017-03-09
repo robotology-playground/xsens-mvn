@@ -45,6 +45,7 @@ class xsens::XsensMVNCalibrator : public XmeCallback {
     enum {
         NONE,
         DIMENSIONS_LOADED,
+        INPROGRESS,
         FINISHED,
         FAILED,
 
@@ -71,6 +72,9 @@ public:
 
     XsensMVNCalibrator(XmeControl& connector);
     virtual ~XsensMVNCalibrator();
+
+    bool isCalibrationInProgress();
+
 
     void addDelegate(xsens::XsensMVNCalibratorDelegate&);
     void removeDelegate(xsens::XsensMVNCalibratorDelegate&);

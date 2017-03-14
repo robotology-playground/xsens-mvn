@@ -1,0 +1,5 @@
+find_package(YARP REQUIRED)
+
+if(NOT TARGET YARP::yarp_experimental)
+  include("${CMAKE_CURRENT_LIST_DIR}/YARP_experimental.cmake")
+endif()

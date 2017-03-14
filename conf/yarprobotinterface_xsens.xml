@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<robot name="xsens">
+
+    <device type="xsens_mvn" name="XsensSuit">
+		<param name="license-dir">"C:\\Program Files\\Xsens\\MVN SDK 4.2\\SDK Files\\rundeps"</param>
+		<param name="suit-config">Human/FullBody</param>
+        <group name="body-dimensions">
+            <param name="ankleHeight">0.07</param>
+            <param name="armSpan">1.71</param>
+            <param name="bodyHeight">1.71</param>
+            <param name="footSize">0.26</param>
+            <param name="hipHeight">0.87</param>
+            <param name="hipWidth">0.25</param>
+            <param name="kneeHeight">0.50</param>
+            <param name="shoulderWidth">0.34</param>
+            <param name="shoeSoleHeight">0.02</param>
+        </group>
+        <!--<group name="body-dimensions">
+            <param name="ankleHeight">0.08</param>
+            <param name="armSpan">1.65</param>
+            <param name="bodyHeight">1.69</param>
+            <param name="footSize">0.25</param>
+            <param name="hipHeight">0.91</param>
+            <param name="hipWidth">0.35</param>
+            <param name="kneeHeight">0.46</param>
+            <param name="shoeSoleHeight">0.0</param>
+            <param name="shoulderWidth">0.45</param>
+        </group>-->
+    </device>
+	
+  
+    <device name="xsens_wrapper" type="xsens_mvn_wrapper">
+        <param name="period">10</param>
+		<param name="name">/xsens</param>
+        
+        <action phase="startup" level="5" type="attach">
+            <paramlist name="networks">
+                 <elem name="XsensDriver">  XsensSuit </elem>
+            </paramlist>
+        </action>
+
+        <action phase="shutdown" level="5" type="detach" />
+    </device>
+	
+  
+</robot> 

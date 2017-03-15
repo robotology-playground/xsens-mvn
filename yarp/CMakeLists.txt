@@ -1,10 +1,11 @@
 
 
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-add_library(yarp_experimental include/yarp/dev/IFrameProvider.h
-                              include/yarp/dev/IXsensMVNInterface.h
-                              IFrameProvider.cpp
-                              IXsensMVNInterface.cpp)
+# must be shared so as to have a successfull dynamic_cast in yarp plugins view
+add_library(yarp_experimental SHARED include/yarp/dev/IFrameProvider.h
+                                     include/yarp/dev/IXsensMVNInterface.h
+                                     IFrameProvider.cpp
+                                     IXsensMVNInterface.cpp)
 
 target_link_libraries(yarp_experimental YARP::YARP_dev)
 target_include_directories(yarp_experimental SYSTEM PUBLIC ${YARP_INCLUDE_DIRS})

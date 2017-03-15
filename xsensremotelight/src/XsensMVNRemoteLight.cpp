@@ -4,10 +4,9 @@
  * CopyPolicy : Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
  */
 
-#include "XsensMVNRemote.h"
+#include "XsensMVNRemoteLight.h"
 
 #include <thrift/XsensSegmentsFrame.h>
-#include <thrift/XsensDriverService.h>
 
 #include <yarp/os/Searchable.h>
 #include <yarp/os/LockGuard.h>
@@ -25,16 +24,15 @@
 namespace yarp {
     namespace dev {
 
-        class XsensMVNRemote::XsensMVNRemotePrivate :
+        static bool parseFrameListOption(const yarp::os::Value &option, std::vector<yarp::experimental::dev::FrameReference> &parsedFrames);
+
+        class XsensMVNRemoteLight::XsensMVNRemoteLightPrivate :
             public yarp::os::TypedReaderCallback<xsens::XsensSegmentsFrame>
         {
         public:
 
             yarp::os::BufferedPort<xsens::XsensSegmentsFrame> m_inputPort;
-            yarp::os::Port m_commandPort;
-            xsens::XsensDriverService m_xsensService;
             yarp::os::ConstString m_remoteStreamingPortName;
-            yarp::os::ConstString m_remoteCommandPortName;
 
             //Buffers for read & associated mutex
             yarp::os::Mutex m_mutex;
@@ -44,13 +42,15 @@ namespace yarp {
             yarp::experimental::dev::IFrameProviderStatus m_status;
             yarp::os::Stamp m_timestamp;
 
+            std::vector<yarp::experimental::dev::FrameReference> m_frames;
+
             unsigned m_segmentsCount;
 
-            XsensMVNRemotePrivate()
+            XsensMVNRemoteLightPrivate()
             : m_status(yarp::experimental::dev::IFrameProviderStatusNoData)
             , m_segmentsCount(0) {}
 
-            virtual ~XsensMVNRemotePrivate() {}
+            virtual ~XsensMVNRemoteLightPrivate() {}
             
             virtual void onRead(xsens::XsensSegmentsFrame& frame)
             {
@@ -100,10 +100,10 @@ namespace yarp {
             }
         };
 
-        XsensMVNRemote::XsensMVNRemote()
-            : m_pimpl(new XsensMVNRemotePrivate()) {}
+        XsensMVNRemoteLight::XsensMVNRemoteLight()
+            : m_pimpl(new XsensMVNRemoteLightPrivate()) {}
 
-        XsensMVNRemote::~XsensMVNRemote()
+        XsensMVNRemoteLight::~XsensMVNRemoteLight()
         {
             assert(m_pimpl);
 
@@ -112,12 +112,18 @@ namespace yarp {
         }
 
 
-        bool XsensMVNRemote::open(yarp::os::Searchable &config)
+        bool XsensMVNRemoteLight::open(yarp::os::Searchable &config)
         {
             assert(m_pimpl);
             yarp::os::LockGuard guard(m_pimpl->m_mutex);
 
-            yarp::os::ConstString deviceName = config.check("local", yarp::os::Value("/xsens_remote"), "Checking device name").asString();
+            //as this is the light version read the frame information from a Bottle list
+            if (!parseFrameListOption(config.find("segments"), m_pimpl->m_frames)) {
+                yError("Error while parsing frames in configuration");
+                return false;
+            }
+
+            yarp::os::ConstString deviceName = config.check("local", yarp::os::Value("/xsens_remote_light"), "Checking device name").asString();
             if (deviceName.empty() || deviceName.at(0) != '/') {
                 yError("Invalid device name '%s'", deviceName.c_str());
                 return false;
@@ -128,45 +134,34 @@ namespace yarp {
                 return false;
             }
 
-            if (!m_pimpl->m_commandPort.open(deviceName + "/cmd:o")) {
-                yError("Could not open command output port");
-                return false;
-            }
-
             yarp::os::ConstString remote = config.find("remote").asString();
             if (remote.empty() || remote[0] != '/') {
                 yError("Invalid remote name %s", remote.c_str());
                 close();
                 return false;
             }
-            m_pimpl->m_remoteCommandPortName = remote + "/cmd:i";
             m_pimpl->m_remoteStreamingPortName = remote + "/frames:o";
 
             yarp::os::ConstString carrier = config.check("carrier", yarp::os::Value("udp"), "Checking streaming connection carrier. Default udp").asString();
 
-            bool result = yarp::os::Network::connect(m_pimpl->m_remoteStreamingPortName.c_str(), m_pimpl->m_inputPort.getName().c_str(), carrier.c_str());
-            result = result && yarp::os::Network::connect(m_pimpl->m_commandPort.getName(), m_pimpl->m_remoteCommandPortName);
-
-            if (!result) {
-                yError("Error while establishing connection to remote (%s) ports", remote.c_str());
-                close();
-                return false;
-            }
-
-            if (!this->m_pimpl->m_xsensService.yarp().attachAsClient(m_pimpl->m_commandPort)) {
-                yError("Error while connecting to remote rpc port");
-                close();
-                return false;
+            yarp::os::Value trueValue; trueValue.fromString("true");
+            bool autoconnect = config.check("autoconnect", trueValue, "Checking autoconnect option").asBool();
+            if (autoconnect) {
+                if (!yarp::os::Network::connect(m_pimpl->m_remoteStreamingPortName.c_str(), m_pimpl->m_inputPort.getName().c_str(), carrier.c_str())) {
+                    yError("Error while establishing connection to remote (%s) ports", remote.c_str());
+                    close();
+                    return false;
+                }
             }
 
             //Obtain information regarding size of data
-            unsigned segmentCount = this->getFrameCount();
+            size_t segmentCount = m_pimpl->m_frames.size();
             m_pimpl->m_poses.reserve(segmentCount);
             m_pimpl->m_velocities.reserve(segmentCount);
             m_pimpl->m_accelerations.reserve(segmentCount);
             m_pimpl->m_segmentsCount = segmentCount;
 
-            for (unsigned i = 0; i < segmentCount; ++i) {
+            for (size_t i = 0; i < segmentCount; ++i) {
                 m_pimpl->m_poses.push_back(yarp::sig::Vector(7, 0.0));
                 m_pimpl->m_velocities.push_back(yarp::sig::Vector(6, 0.0));
                 m_pimpl->m_accelerations.push_back(yarp::sig::Vector(6, 0.0));
@@ -175,26 +170,23 @@ namespace yarp {
             //register for callbacks
             m_pimpl->m_inputPort.useCallback(*m_pimpl);
 
-            return result;
+            return true;
         }
-        bool XsensMVNRemote::close()
+        bool XsensMVNRemoteLight::close()
         {
             assert(m_pimpl);
             yarp::os::LockGuard guard(m_pimpl->m_mutex);
 
             m_pimpl->m_inputPort.disableCallback();
 
-            bool result = yarp::os::Network::disconnect(m_pimpl->m_remoteStreamingPortName, m_pimpl->m_inputPort.getName());
-            result = result && yarp::os::Network::disconnect(m_pimpl->m_commandPort.getName(), m_pimpl->m_remoteCommandPortName);
-
+            yarp::os::Network::disconnect(m_pimpl->m_remoteStreamingPortName, m_pimpl->m_inputPort.getName());
             m_pimpl->m_inputPort.close();
-            m_pimpl->m_commandPort.close();
 
             return true;
         }
 
         // IPreciselyTimed interface
-        yarp::os::Stamp XsensMVNRemote::getLastInputStamp()
+        yarp::os::Stamp XsensMVNRemoteLight::getLastInputStamp()
         {
             assert(m_pimpl);
             yarp::os::LockGuard guard(m_pimpl->m_mutex);
@@ -203,24 +195,14 @@ namespace yarp {
 
 
         // IFrameProvider interface
-        std::vector<yarp::experimental::dev::FrameReference> XsensMVNRemote::frames()
+        std::vector<yarp::experimental::dev::FrameReference> XsensMVNRemoteLight::frames()
         {
             assert(m_pimpl);
-            std::vector<xsens::FrameReferece> frames = m_pimpl->m_xsensService.segments();
-            std::vector<yarp::experimental::dev::FrameReference> deserializedFrames;
-            deserializedFrames.reserve(frames.size());
-            std::for_each(frames.begin(), frames.end(), [&](xsens::FrameReferece& frame) {
-                yarp::experimental::dev::FrameReference referenceFrame;
-                referenceFrame.frameReference = frame.frameReference;
-                referenceFrame.frameName = frame.frameName;
-                deserializedFrames.push_back(referenceFrame);
-            });
-
-            return deserializedFrames;
+            return m_pimpl->m_frames;
         }
 
         // Get Data
-        yarp::experimental::dev::IFrameProviderStatus XsensMVNRemote::getFramePoses(std::vector<yarp::sig::Vector>& segmentPoses)
+        yarp::experimental::dev::IFrameProviderStatus XsensMVNRemoteLight::getFramePoses(std::vector<yarp::sig::Vector>& segmentPoses)
         {
             assert(m_pimpl);
             yarp::os::LockGuard guard(m_pimpl->m_mutex);
@@ -229,7 +211,7 @@ namespace yarp {
 
         }
 
-        yarp::experimental::dev::IFrameProviderStatus XsensMVNRemote::getFrameVelocities(std::vector<yarp::sig::Vector>& segmentVelocities)
+        yarp::experimental::dev::IFrameProviderStatus XsensMVNRemoteLight::getFrameVelocities(std::vector<yarp::sig::Vector>& segmentVelocities)
         {
             assert(m_pimpl);
             yarp::os::LockGuard guard(m_pimpl->m_mutex);
@@ -237,7 +219,7 @@ namespace yarp {
             return m_pimpl->m_status;
         }
 
-        yarp::experimental::dev::IFrameProviderStatus XsensMVNRemote::getFrameAccelerations(std::vector<yarp::sig::Vector>& segmentAccelerations)
+        yarp::experimental::dev::IFrameProviderStatus XsensMVNRemoteLight::getFrameAccelerations(std::vector<yarp::sig::Vector>& segmentAccelerations)
         {
             assert(m_pimpl);
             yarp::os::LockGuard guard(m_pimpl->m_mutex);
@@ -245,9 +227,9 @@ namespace yarp {
             return m_pimpl->m_status;
         }
 
-        yarp::experimental::dev::IFrameProviderStatus XsensMVNRemote::getFrameInformation(std::vector<yarp::sig::Vector>& segmentPoses,
-                                                 std::vector<yarp::sig::Vector>& segmentVelocities,
-                                                 std::vector<yarp::sig::Vector>& segmentAccelerations)
+        yarp::experimental::dev::IFrameProviderStatus XsensMVNRemoteLight::getFrameInformation(std::vector<yarp::sig::Vector>& segmentPoses,
+                                                                                               std::vector<yarp::sig::Vector>& segmentVelocities,
+                                                                                               std::vector<yarp::sig::Vector>& segmentAccelerations)
         {
             assert(m_pimpl);
             yarp::os::LockGuard guard(m_pimpl->m_mutex);
@@ -256,56 +238,26 @@ namespace yarp {
             segmentAccelerations = m_pimpl->m_accelerations;
             return m_pimpl->m_status;
         }
-        
-        // IXsensMVNInterface interface
-        bool XsensMVNRemote::setBodyDimensions(const std::map<std::string, double>& dimensions)
-        {
-            assert(m_pimpl);
-            return m_pimpl->m_xsensService.setBodyDimensions(dimensions);
-        }
 
-        bool XsensMVNRemote::setBodyDimension(const std::string& bodyPart, const double dimension)
+        static bool parseFrameListOption(const yarp::os::Value &option, std::vector<yarp::experimental::dev::FrameReference> &parsedFrames)
         {
-            assert(m_pimpl);
-            return m_pimpl->m_xsensService.setBodyDimension(bodyPart, dimension);
-        }
+            if (option.isNull() || !option.isList() || !option.asList()) return false;
+            yarp::os::Bottle *frames = option.asList();
+            parsedFrames.reserve(static_cast<size_t>(frames->size()));
 
-        std::map<std::string, double> XsensMVNRemote::bodyDimensions()
-        {
-            assert(m_pimpl);
-            return m_pimpl->m_xsensService.bodyDimensions();
-        }
-
-        // Calibration methods
-        bool XsensMVNRemote::calibrate(const std::string &calibrationType)
-        {
-            assert(m_pimpl);
-            if (calibrationType.empty())
-                return m_pimpl->m_xsensService.calibrate();
-            return m_pimpl->m_xsensService.calibrateWithType(calibrationType);
-        }
-
-        bool XsensMVNRemote::abortCalibration()
-        {
-            assert(m_pimpl);
-            m_pimpl->m_xsensService.abortCalibration();
+            for (int i = 0; i < frames->size(); ++i) {
+                yarp::experimental::dev::FrameReference frameReference;
+                yarp::os::Value &reference = frames->get(i);
+                if (reference.isNull() || !reference.isList()
+                    || !reference.asList() || reference.asList()->size() != 2) {
+                    yWarning("Malformed input segment at index %d", i);
+                    continue;
+                }
+                frameReference.frameReference = reference.asList()->get(0).asString();
+                frameReference.frameName = reference.asList()->get(1).asString();
+                parsedFrames.push_back(frameReference);
+            }
             return true;
         }
-
-        //Acquisition methods
-        bool XsensMVNRemote::startAcquisition()
-        {
-            assert(m_pimpl);
-            m_pimpl->m_xsensService.startAcquisition();
-            return true;
-        }
-
-        bool XsensMVNRemote::stopAcquisition()
-        {
-            assert(m_pimpl);
-            m_pimpl->m_xsensService.stopAcquisition();
-            return true;
-        }
-
     }
 }

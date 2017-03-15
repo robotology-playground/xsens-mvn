@@ -30,6 +30,8 @@ if (${XsensXME_FOUND})
     target_link_libraries(xsens_mvn_wrapper YARP::YARP_OS YARP::YARP_dev YARP::YARP_sig xsens_mvn_idl yarp_experimental)
     target_include_directories(xsens_mvn_wrapper SYSTEM PUBLIC ${YARP_INCLUDE_DIRS})
     target_include_directories(xsens_mvn_wrapper PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include")
+    
+    target_compile_features(xsens_mvn_wrapper PRIVATE cxx_lambdas)
 
     yarp_install(TARGETS xsens_mvn_wrapper
            COMPONENT runtime

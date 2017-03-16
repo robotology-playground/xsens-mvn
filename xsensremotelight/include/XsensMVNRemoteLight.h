@@ -4,33 +4,30 @@
 * CopyPolicy : Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
 */
 
-#ifndef YARP_XSENSMVNREMOTE_H
-#define YARP_XSENSMVNREMOTE_H
+#ifndef YARP_XSENSMVNREMOTELIGHT_H
+#define YARP_XSENSMVNREMOTELIGHT_H
 
 #include <yarp/dev/DeviceDriver.h>
 #include <yarp/dev/PreciselyTimed.h>
 #include <yarp/dev/IFrameProvider.h>
-#include <yarp/dev/IXsensMVNInterface.h>
 
 namespace yarp {
     namespace dev {
-        class XsensMVNRemote;
+        class XsensMVNRemoteLight;
     }
 }
 
-class yarp::dev::XsensMVNRemote
+class yarp::dev::XsensMVNRemoteLight
 : public yarp::dev::DeviceDriver
 , public yarp::dev::IPreciselyTimed
 , public yarp::experimental::dev::IFrameProvider
-, public yarp::experimental::dev::IXsensMVNInterface
-
 {
-    class XsensMVNRemotePrivate;
-    XsensMVNRemotePrivate* m_pimpl;
+    class XsensMVNRemoteLightPrivate;
+    XsensMVNRemoteLightPrivate* m_pimpl;
 
 public:
-    XsensMVNRemote();
-    virtual ~XsensMVNRemote();
+    XsensMVNRemoteLight();
+    virtual ~XsensMVNRemoteLight();
 
     // DeviceDriver interface 
     bool open(yarp::os::Searchable &config);
@@ -48,20 +45,7 @@ public:
     virtual yarp::experimental::dev::IFrameProviderStatus getFrameInformation(std::vector<yarp::sig::Vector>& segmentPoses,
                                                                               std::vector<yarp::sig::Vector>& segmentVelocities,
                                                                               std::vector<yarp::sig::Vector>& segmentAccelerations);
-    
-
-    // IXsensMVNInterface interface
-    virtual bool setBodyDimensions(const std::map<std::string, double>& dimensions);
-    virtual bool setBodyDimension(const std::string& bodyPart, const double dimension);
-    virtual std::map<std::string, double> bodyDimensions();
-
-    virtual bool calibrate(const std::string &calibrationType = "");
-    virtual bool abortCalibration();
-
-    virtual bool startAcquisition();
-    virtual bool stopAcquisition();
-
 
 };
 
-#endif /* end of include guard: YARP_XSENSMVNREMOTE_H */
+#endif /* end of include guard: YARP_XSENSMVNREMOTELIGHT_H */

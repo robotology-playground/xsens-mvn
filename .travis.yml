@@ -1,60 +1,109 @@
-sudo: required
+sudo: false
 dist: trusty
 osx_image: xcode7.3
 language: cpp
-cache: ccache 
+cache: ccache
+
+services:
+  - docker
+
+compiler:
+  - clang
+  - gcc
+
+os:
+  - linux
+  - osx
+
+env:
+  matrix:
+    - TRAVIS_CMAKE_GENERATOR="Unix Makefiles" TRAVIS_BUILD_TYPE="Release"
+    - TRAVIS_CMAKE_GENERATOR="Unix Makefiles" TRAVIS_BUILD_TYPE="Debug"
+  global:
+   - PROJECT_DIR_ABS=$TRAVIS_BUILD_DIR
+   - YARP_DOCKER_TAG="bin"
 
 matrix:
   include:
-    - os: linux
-      compiler: clang
-      env: TRAVIS_CMAKE_GENERATOR="Unix Makefiles", TRAVIS_BUILD_TYPE="Debug"
-    - os: linux
-      compiler: clang
-      env: TRAVIS_CMAKE_GENERATOR="Unix Makefiles", TRAVIS_BUILD_TYPE="Release"
-    - os: linux
-      compiler: gcc
-      env: TRAVIS_CMAKE_GENERATOR="Unix Makefiles", TRAVIS_BUILD_TYPE="Debug"
-    - os: linux
-      compiler: gcc
-      env: TRAVIS_CMAKE_GENERATOR="Unix Makefiles", TRAVIS_BUILD_TYPE="Release"
     - os: osx
-      compiler: gcc
-      env: TRAVIS_CMAKE_GENERATOR="Unix Makefiles", TRAVIS_BUILD_TYPE="Debug"
+      env: TRAVIS_CMAKE_GENERATOR="Xcode" TRAVIS_BUILD_TYPE="Release"
     - os: osx
-      compiler: clang
-      env: TRAVIS_CMAKE_GENERATOR="Xcode", TRAVIS_BUILD_TYPE="Release"
+      env: TRAVIS_CMAKE_GENERATOR="Xcode" TRAVIS_BUILD_TYPE="Debug"
+
+before_install:
+  # Install ccache and build dependencies on osx
+  - >-
+    if [[ "$TRAVIS_OS_NAME" = "osx" ]] ; then
+      brew install ccache || travis_terminate 1
+      export PATH="/usr/local/opt/ccache/libexec:$PATH"
+      gem install xcpretty || travis_terminate 1
+      brew update &> /dev/null || travis_terminate 1
+      brew tap robotology/cask || travis_terminate 1
+      brew tap homebrew/science || travis_terminate 1
+      brew install eigen yarp || travis_terminate 1
+    elif [[ "$TRAVIS_OS_NAME" = "linux" ]] ; then
+      docker pull robotology/yarp-tdd:gazebo8${YARP_DOCKER_TAG} || travis_terminate 1
+    fi
 
 before_script:
-  # Install ccache on osx
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then brew install ccache; fi
-  - if [ "$TRAVIS_OS_NAME" == "osx" ]; then export PATH="/usr/local/opt/ccache/libexec:$PATH"; fi
-
-  # Use ccache also for clang and clang++ on linux
-  # See https://github.com/travis-ci/travis-ci/issues/5383#issuecomment-224630584
-  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then if [ "$CC" == "clang" ]; then sudo ln -s ../../bin/ccache /usr/lib/ccache/clang; fi; fi
-  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then if [ "$CC" == "clang" ]; then export CFLAGS="-Qunused-arguments"; fi; fi
-  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then if [ "$CXX" == "clang++" ]; then sudo ln -s ../../bin/ccache /usr/lib/ccache/clang++; fi; fi
-  - if [ "$TRAVIS_OS_NAME" == "linux" ]; then if [ "$CXX" == "clang++" ]; then export CXXFLAGS="-Qunused-arguments"; fi; fi
-
-  # Install (system, i.e. apt-get and homebrew) deps
-  - sh .ci/travis-deps.sh
-  # Configure project
-  - cmake --version
-  - mkdir build
-  - cd build
-  - cmake -G"${TRAVIS_CMAKE_GENERATOR}" -DCMAKE_BUILD_TYPE=${TRAVIS_BUILD_TYPE}  ..
+  # Run CMake into the persistent $PROJECT_DIR_ABS folder
+  - cd $PROJECT_DIR_ABS
+  - mkdir build && cd build
+  - >-
+    if [[ "$TRAVIS_OS_NAME" = "osx" ]] ; then
+      cmake -G"${TRAVIS_CMAKE_GENERATOR}" \
+            -DCMAKE_BUILD_TYPE=${TRAVIS_BUILD_TYPE} \
+            .. \
+            || travis_terminate 1
+    elif [[ "$TRAVIS_OS_NAME" = "linux" ]] ; then
+      docker run -it --rm \
+        -v "$HOME/.ccache:/root/.ccache" \
+        -v "$PROJECT_DIR_ABS:/app" -w /app \
+        -e CC=$CC \
+        -e CXX=$CXX \
+        robotology/yarp-tdd:gazebo8${YARP_DOCKER_TAG} \
+        sh -c 'cd build && cmake -DCMAKE_BUILD_TYPE=${TRAVIS_BUILD_TYPE} ..' \
+        || travis_terminate 1
+    fi
 
 script:
-  - cmake --build . --config ${TRAVIS_BUILD_TYPE}
+  # Build the project
+  - >-
+    if [[ "$TRAVIS_OS_NAME" = "osx" ]] ; then
+      cmake --build . --config ${TRAVIS_BUILD_TYPE} \
+      || travis_terminate 1
+    elif [[ "$TRAVIS_OS_NAME" = "linux" ]] ; then
+      docker run -it --rm \
+        -v "$HOME/.ccache:/root/.ccache" \
+        -v "$PROJECT_DIR_ABS:/app" -w /app \
+        -e CC=$CC \
+        -e CXX=$CXX \
+        robotology/yarp-tdd:gazebo8${YARP_DOCKER_TAG} \
+        sh -c 'cd build && cmake --build . --config ${TRAVIS_BUILD_TYPE}' \
+        || travis_terminate 1
+    fi
 
 after_success:
-  - sudo cmake --build . --config ${TRAVIS_BUILD_TYPE} --target install
-  
+  # Install the project (just for logging)
+  - >-
+    if [[ "$TRAVIS_OS_NAME" = "osx" ]] ; then
+      cmake --build . --config ${TRAVIS_BUILD_TYPE} --target install \
+      || travis_terminate 1
+    elif [[ "$TRAVIS_OS_NAME" = "linux" ]] ; then
+      docker run -it --rm \
+        -v "$HOME/.ccache:/root/.ccache" \
+        -v "$PROJECT_DIR_ABS:/app" -w /app \
+        -e CC=$CC \
+        -e CXX=$CXX \
+        robotology/yarp-tdd:gazebo8${YARP_DOCKER_TAG} \
+        sh -c 'cd build && cmake --build . --config ${TRAVIS_BUILD_TYPE} --target install' \
+        || travis_terminate 1
+    fi
+
 # Enable when tests are added to the repo
 # - ctest --build . --config ${TRAVIS_BUILD_TYPE}
 
-# Fill with mantainer(s) emails 
+# Fill with mantainer(s) emails
 # notifications:
 #  email:
-#    - whowantstobemantainedr@email.com 
+#    - whowantstobemantainedr@email.com

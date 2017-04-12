@@ -8,10 +8,14 @@ if(ENABLE_mvnx_parser)
 
     # Build libraries
     add_subdirectory(xmlStreamReader)
+    add_subdirectory(mvnxStreamReader)
 
-    # Build the executable
+    # Build the executables
+    # XML
     add_executable(xmlStreamReaderDriver xmlStreamReaderDriver.cpp)
     target_link_libraries(xmlStreamReaderDriver xmlStreamReader)
-    # target_link_libraries(xmlStreamReaderDriver mvnxStreamReader)
+    # MNVX
+    add_executable(mvnxStreamReaderDriver mvnxStreamReaderDriver.cpp)
+    target_link_libraries(mvnxStreamReaderDriver mvnxStreamReader)
 
 endif()

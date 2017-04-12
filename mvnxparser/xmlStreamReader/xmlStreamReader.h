@@ -30,13 +30,16 @@ using namespace std;
 
 class xmlStreamReader {
 private:
-	QFile xmlFile;
-	QUrl schemaUrl;
-	QXmlSchema schema;
 	QCoreApplication* coreApp;
 	int dummyArgc;
 	char* dummyArgv;
+
+protected:
+	QFile xmlFile;
+	QUrl schemaUrl;
+	QXmlSchema schema;
 	xmlMessageHandler handler;
+	bool virtual parse() { return true; };
 
 public:
 	xmlStreamReader();
@@ -49,4 +52,4 @@ public:
 	virtual ~xmlStreamReader();
 };
 
-#endif
+#endif // XML_STREAM_READER_H

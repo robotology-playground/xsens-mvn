@@ -14,44 +14,51 @@
 
 #include "xmlStreamReader.h"
 
-xmlStreamReader::xmlStreamReader() {
-	if (QCoreApplication::instance() == NULL) {
-		dummyArgc = 1;
-		dummyArgv = new char[1]{' '};
-		coreApp   = new QCoreApplication(dummyArgc, &dummyArgv);
-	}
+xmlStreamReader::xmlStreamReader()
+{
+    if (QCoreApplication::instance() == nullptr) {
+        dummyArgc = 1;
+        dummyArgv = new char[1]{' '};
+        coreApp   = new QCoreApplication(dummyArgc, &dummyArgv);
+    }
 }
-xmlStreamReader::xmlStreamReader(string documentFile) : xmlStreamReader() {
-	setDocument(documentFile);
+xmlStreamReader::xmlStreamReader(string documentFile) : xmlStreamReader()
+{
+    setDocument(documentFile);
 }
 
 xmlStreamReader::xmlStreamReader(string documentFile, string schemaFile)
-    : xmlStreamReader(documentFile) {
-	setSchema(schemaFile);
+    : xmlStreamReader(documentFile)
+{
+    setSchema(schemaFile);
 }
 
-bool xmlStreamReader::setDocument(string documentFile) {
-	xmlFile.setFileName(QString(documentFile.c_str()));
-	return xmlFile.open(QIODevice::ReadOnly); // TODO> where?
+bool xmlStreamReader::setDocument(string documentFile)
+{
+    xmlFile.setFileName(QString(documentFile.c_str()));
+    return xmlFile.open(QIODevice::ReadOnly);
 }
 
-bool xmlStreamReader::setSchema(string schemaFile) {
-	setXmlMessageHandler(handler);
-	schemaUrl = QUrl(("file://" + schemaFile).c_str());
-	return schema.load(schemaUrl);
+bool xmlStreamReader::setSchema(string schemaFile)
+{
+    setXmlMessageHandler(handler);
+    schemaUrl = QUrl(("file://" + schemaFile).c_str());
+    return schema.load(schemaUrl);
 }
 
-// TODO; what happens if setSchema is called before setMessageHandler?
-void xmlStreamReader::setXmlMessageHandler(xmlMessageHandler& _handler) {
-	schema.setMessageHandler(&_handler);
+void xmlStreamReader::setXmlMessageHandler(xmlMessageHandler& _handler)
+{
+    schema.setMessageHandler(&_handler);
 }
 
-bool xmlStreamReader::validate() {
-	QXmlSchemaValidator validator(schema);
-	if (not xmlFile.isOpen())
-		xmlFile.open(QIODevice::ReadOnly);
-	return validator.validate(&xmlFile, schemaUrl);
+bool xmlStreamReader::validate()
+{
+    QXmlSchemaValidator validator(schema);
+    if (not xmlFile.isOpen())
+        xmlFile.open(QIODevice::ReadOnly);
+    return validator.validate(&xmlFile, schemaUrl);
 }
-xmlStreamReader::~xmlStreamReader() {
-	delete coreApp;
+xmlStreamReader::~xmlStreamReader()
+{
+    delete coreApp;
 }

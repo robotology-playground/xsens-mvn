@@ -20,22 +20,22 @@
 
 class xmlMessageHandler : public QAbstractMessageHandler {
 public:
-	xmlMessageHandler() : QAbstractMessageHandler(0) {}
-	QString statusMessage() const { return m_description; }
-	int line() const { return m_sourceLocation.line(); }
-	int column() const { return m_sourceLocation.column(); }
-	void printMessage() const;
+    xmlMessageHandler() : QAbstractMessageHandler(0) {}
+    QString statusMessage() const { return m_description; }
+    int line() const { return m_sourceLocation.line(); }
+    int column() const { return m_sourceLocation.column(); }
+    void printMessage() const;
 
 protected:
-	virtual void handleMessage(QtMsgType type,
-	                           const QString& description,
-	                           const QUrl& identifier,
-	                           const QSourceLocation& sourceLocation);
+    virtual void handleMessage(QtMsgType type,
+                               const QString& description,
+                               const QUrl& identifier,
+                               const QSourceLocation& sourceLocation);
 
 private:
-	QtMsgType m_messageType;
-	QString m_description;
-	QSourceLocation m_sourceLocation;
+    QtMsgType m_messageType;
+    QString m_description;
+    QSourceLocation m_sourceLocation;
 };
 
 #endif /* XML_MESSAGE_HANDLER_H */

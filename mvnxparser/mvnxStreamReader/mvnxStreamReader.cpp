@@ -19,193 +19,193 @@ using namespace std;
 
 void mvnxStreamReader::printParsedDocument()
 {
-	// Initialize the XML file
-	QXmlStreamReader xml;
-	xmlFile.seek(0);
-	xml.setDevice(&xmlFile);
+    // Initialize the XML file
+    QXmlStreamReader xml;
+    xmlFile.seek(0);
+    xml.setDevice(&xmlFile);
 
-	// Initialize the objects that will contain the metadata of the current
-	// element
-	QXmlStreamReader::TokenType tokenType;
-	string tokenString;
-	string elementName;
-	// string elementNS; // TODO: Namespace support
-	string elementText;
-	QXmlStreamAttributes elementAttributes;
+    // Initialize the objects that will contain the metadata of the current
+    // element
+    QXmlStreamReader::TokenType tokenType;
+    string tokenString;
+    string elementName;
+    // string elementNS; // TODO: Namespace support
+    string elementText;
+    QXmlStreamAttributes elementAttributes;
 
-	while (!xml.atEnd()) {
-		xml.readNext();
+    while (!xml.atEnd()) {
+        xml.readNext();
 
-		tokenType          = xml.tokenType();
-		tokenString        = xml.tokenString().toStdString();
-		string elementName = xml.name().toString().toStdString();
-		// string ElementNS   = xml.namespaceUri().toString().toStdString();
-		string elementText = xml.text().toString().toStdString();
-		elementAttributes  = xml.attributes();
+        tokenType          = xml.tokenType();
+        tokenString        = xml.tokenString().toStdString();
+        string elementName = xml.name().toString().toStdString();
+        // string ElementNS   = xml.namespaceUri().toString().toStdString();
+        string elementText = xml.text().toString().toStdString();
+        elementAttributes  = xml.attributes();
 
-		if (not xml.isCharacters()) {
-			cout << tokenString << ": " << elementName << endl;
-			if (not elementAttributes.empty()) {
-				for (auto element : elementAttributes)
-					cout << "   " << element.name().toString().toStdString()
-					     << "=\"" << element.value().toString().toStdString()
-					     << "\"" << endl;
-			}
-		}
+        if (not xml.isCharacters()) {
+            cout << tokenString << ": " << elementName << endl;
+            if (not elementAttributes.empty()) {
+                for (auto element : elementAttributes)
+                    cout << "   " << element.name().toString().toStdString()
+                         << "=\"" << element.value().toString().toStdString()
+                         << "\"" << endl;
+            }
+        }
 
-		if (xml.isStartDocument() || xml.isEndDocument()) {
-			cout << endl;
-			continue;
-		}
+        if (xml.isStartDocument() || xml.isEndDocument()) {
+            cout << endl;
+            continue;
+        }
 
-		// Print the content of the element
-		if (xml.isCharacters() && not xml.isWhitespace())
-			cout << tokenString << ": " << xml.text().toString().toStdString()
-			     << endl;
-	}
+        // Print the content of the element
+        if (xml.isCharacters() && not xml.isWhitespace())
+            cout << tokenString << ": " << xml.text().toString().toStdString()
+                 << endl;
+    }
 }
 
 bool mvnxStreamReader::parse()
 {
-	// Initialize the XML file
-	QXmlStreamReader xml;
-	xmlFile.seek(0);
-	xml.setDevice(&xmlFile);
+    // Initialize the XML file
+    QXmlStreamReader xml;
+    xmlFile.seek(0);
+    xml.setDevice(&xmlFile);
 
-	// Initialize the objects that will contain the metadata of the current
-	// element
-	QXmlStreamReader::TokenType tokenType;
-	string tokenString;
-	string elementName;
-	// string elementNS; // TODO: Namespace support
-	string elementText;
-	QXmlStreamAttributes elementAttributes;
+    // Initialize the objects that will contain the metadata of the current
+    // element
+    QXmlStreamReader::TokenType tokenType;
+    string tokenString;
+    string elementName;
+    // string elementNS; // TODO: Namespace support
+    string elementText;
+    QXmlStreamAttributes elementAttributes;
 
-	// Sequentially parse the file
-	while (!xml.atEnd()) {
-		xml.readNext();
+    // Sequentially parse the file
+    while (!xml.atEnd()) {
+        xml.readNext();
 
-		// Get the metadata of the element
-		tokenType   = xml.tokenType();
-		tokenString = xml.tokenString().toStdString();
-		elementName = xml.name().toString().toStdString();
-		// elementNS   = xml.namespaceUri().toString().toStdString();
-		elementText       = xml.text().toString().toStdString();
-		elementAttributes = xml.attributes();
+        // Get the metadata of the element
+        tokenType   = xml.tokenType();
+        tokenString = xml.tokenString().toStdString();
+        elementName = xml.name().toString().toStdString();
+        // elementNS   = xml.namespaceUri().toString().toStdString();
+        elementText       = xml.text().toString().toStdString();
+        elementAttributes = xml.attributes();
 
-		// Handle the generated events
-		switch (tokenType) {
-			case QXmlStreamReader::StartDocument:
-				// TODO
-				break;
-			case QXmlStreamReader::StartElement:
-				handleStartElement(elementName, elementAttributes);
-				break;
-			case QXmlStreamReader::Characters:
-				handleCharacters(elementText);
-				break;
-			case QXmlStreamReader::Comment:
-				handleComment(elementText);
-				break;
-			case QXmlStreamReader::EndElement:
-				handleStopElement(elementName);
-				break;
-			case QXmlStreamReader::EndDocument:
-				xmlTreeRoot = dynamic_cast<xmlContent*>(elementsLIFO.front());
-				break;
-			default:
-				break;
-		}
-	}
-	return false;
+        // Handle the generated events
+        switch (tokenType) {
+            case QXmlStreamReader::StartDocument:
+                break;
+            case QXmlStreamReader::StartElement:
+                handleStartElement(elementName, elementAttributes);
+                break;
+            case QXmlStreamReader::Characters:
+                handleCharacters(elementText);
+                break;
+            case QXmlStreamReader::Comment:
+                handleComment(elementText);
+                break;
+            case QXmlStreamReader::EndElement:
+                handleStopElement(elementName);
+                break;
+            case QXmlStreamReader::EndDocument:
+                xmlTreeRoot = dynamic_cast<xmlContent*>(elementsLIFO.front());
+                break;
+            default:
+                break;
+        }
+    }
+    return false;
 }
 
 attributes_t
 mvnxStreamReader::processAttributes(QXmlStreamAttributes elementAttributes)
 {
-	attributes_t attributes;
-	if (not elementAttributes.empty()) {
-		for (auto element : elementAttributes) {
-			attributes[element.name().toString().toStdString()]
-			          = element.value().toString().toStdString();
-		}
-	}
-	return attributes;
+    attributes_t attributes;
+    if (not elementAttributes.empty()) {
+        for (auto element : elementAttributes) {
+            attributes[element.name().toString().toStdString()]
+                      = element.value().toString().toStdString();
+        }
+    }
+    return attributes;
 }
 
 bool mvnxStreamReader::elementIsEnabled(string elementName)
 {
-	// If the user didn't provide any configuration, all elements are enabled
-	if (conf.empty()) {
-		return true;
-	}
-	else {
-		try {
-			if (conf[elementName] == true)
-				return true;
-		} catch (const std::out_of_range& e) {
-			return false;
-		};
-		return false;
-	}
+    // If the user didn't provide any configuration, all elements are enabled
+    if (conf.empty()) {
+        return true;
+    }
+    else {
+        try {
+            if (conf[elementName] == true)
+                return true;
+        } catch (const std::out_of_range& e) {
+            return false;
+        };
+        return false;
+    }
 }
 
 void mvnxStreamReader::handleStartElement(
           string elementName, QXmlStreamAttributes elementAttributes)
 {
-	if (elementIsEnabled(elementName)) {
-		// Create an istance of the new element
-		xmlContent* element = new xmlContent(
-		          elementName, processAttributes(elementAttributes));
-		// Push it in the buffer
-		elementsLIFO.push_back(element);
-	}
+    if (elementIsEnabled(elementName)) {
+        // Create an istance of the new element
+        xmlContent* element = new xmlContent(
+                  elementName, processAttributes(elementAttributes));
+        // Push it in the buffer
+        elementsLIFO.push_back(element);
+    }
 }
 
 void mvnxStreamReader::handleCharacters(string elementText)
 {
-	xmlContent* lastElement = elementsLIFO.back();
-	assert(lastElement != NULL);
-	lastElement->setText(elementText);
+    xmlContent* lastElement = elementsLIFO.back();
+    assert(lastElement != nullptr);
+    lastElement->setText(elementText);
 }
 
 void mvnxStreamReader::handleComment(string elementText)
 {
-	// TODO: this is not a mvnx <comment> but a XML comment
+    // TODO: this is not a mvnx <comment> but a XML comment
 }
 
 void mvnxStreamReader::handleStopElement(string elementName)
 {
-	if (elementIsEnabled(elementName)) {
-		if (elementsLIFO.size() > 1) {
-			// Extract parent and child elements
-			IContent* lastElement
-			          = dynamic_cast<IContent*>(elementsLIFO.back());
-			IContent* secondToLastElement
-			          = dynamic_cast<IContent*>(elementsLIFO.end()[-2]);
-			assert(lastElement != NULL && secondToLastElement != NULL);
-			assert(lastElement->getElementName() == elementName);
+    if (elementIsEnabled(elementName)) {
+        if (elementsLIFO.size() > 1) {
+            // Extract parent and child elements
+            IContent* lastElement
+                      = dynamic_cast<IContent*>(elementsLIFO.back());
+            IContent* secondToLastElement
+                      = dynamic_cast<IContent*>(elementsLIFO.end()[-2]);
+            assert(lastElement != nullptr && secondToLastElement != nullptr);
+            assert(lastElement->getElementName() == elementName);
 
-			// Assign the child the parent element
-			secondToLastElement->setChild(lastElement);
+            // Assign the child the parent element
+            secondToLastElement->setChild(lastElement);
 
-			// Delete che assigned child from the buffer of the XML tree
-			elementsLIFO.pop_back();
-		}
-	}
+            // Delete che assigned child from the buffer of the XML tree
+            elementsLIFO.pop_back();
+        }
+    }
 }
 
 vector<xmlContent*> mvnxStreamReader::findElement(string elementName)
 {
-	vector<xmlContent*> childElementsCasted;
-	if (xmlTreeRoot != NULL) {
-		vector<IContent*> childElements
-		          = xmlTreeRoot->findChildElements(elementName);
-		childElementsCasted.resize(childElements.size());
-		// Cast to xmlContent the vector's item using a lambda expression
-		transform(childElements.begin(), childElements.end(),
-		          childElementsCasted.begin(),
-		          [](IContent* e) { return dynamic_cast<xmlContent*>(e); });
-	}
-	return childElementsCasted;
+    vector<xmlContent*> childElementsCasted;
+    if (xmlTreeRoot != nullptr) {
+        vector<IContent*> childElements
+                  = xmlTreeRoot->findChildElements(elementName);
+        childElementsCasted.resize(childElements.size());
+        // Cast to xmlContent the vector's item using a lambda expression
+        transform(childElements.begin(),
+                  childElements.end(),
+                  childElementsCasted.begin(),
+                  [](IContent* e) { return dynamic_cast<xmlContent*>(e); });
+    }
+    return childElementsCasted;
 }

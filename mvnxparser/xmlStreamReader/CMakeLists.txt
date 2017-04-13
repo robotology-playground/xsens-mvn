@@ -15,7 +15,7 @@ find_package(Qt5XmlPatterns REQUIRED)
 add_subdirectory(xmlMessageHandler)
 
 # Build the library
-add_library(xmlStreamReader STATIC xmlStreamReader.cpp) # TODO shared?
+add_library(xmlStreamReader STATIC xmlStreamReader.cpp)
 
 # Link the libraries used by this library
 target_link_libraries(xmlStreamReader xmlMessageHandler)

@@ -28,33 +28,33 @@ typedef unordered_map<string, bool> mvnxConf;
 
 class mvnxStreamReader : public xmlStreamReader {
 private:
-	mvnxConf conf;
-	xmlContent* xmlTreeRoot;
-	vector<xmlContent*> elementsLIFO;
+    mvnxConf conf;
+    xmlContent* xmlTreeRoot;
+    vector<xmlContent*> elementsLIFO;
 
 public:
-	mvnxStreamReader() : xmlTreeRoot(NULL){};
+    mvnxStreamReader() : xmlTreeRoot(nullptr){};
 
-	// Get methods
-	mvnxConf getConf() const { return conf; };
-	xmlContent* getXmlTreeRoot() const { return xmlTreeRoot; };
+    // Get methods
+    mvnxConf getConf() const { return conf; };
+    xmlContent* getXmlTreeRoot() const { return xmlTreeRoot; };
 
-	// Set methods
-	void setConf(mvnxConf _conf) { conf = _conf; };
+    // Set methods
+    void setConf(mvnxConf _conf) { conf = _conf; };
 
-	// Exposed API for parsing, displaying and handling the document
-	bool parse();
-	void printParsedDocument();
-	vector<xmlContent*> findElement(string elementName);
+    // Exposed API for parsing, displaying and handling the document
+    bool parse();
+    void printParsedDocument();
+    vector<xmlContent*> findElement(string elementName);
 
 private:
-	void handleStartElement(string elementName,
-	                        QXmlStreamAttributes elementAttributes);
-	void handleCharacters(string elementText);
-	void handleComment(string elementText);
-	void handleStopElement(string elementName);
-	bool elementIsEnabled(string elementName);
-	attributes_t processAttributes(QXmlStreamAttributes elementAttributes);
+    void handleStartElement(string elementName,
+                            QXmlStreamAttributes elementAttributes);
+    void handleCharacters(string elementText);
+    void handleComment(string elementText);
+    void handleStopElement(string elementName);
+    bool elementIsEnabled(string elementName);
+    attributes_t processAttributes(QXmlStreamAttributes elementAttributes);
 };
 } // namespace mvnx_ns
 

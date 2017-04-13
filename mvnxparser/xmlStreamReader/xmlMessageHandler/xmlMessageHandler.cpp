@@ -17,14 +17,16 @@
 void xmlMessageHandler::handleMessage(QtMsgType type,
                                       const QString& description,
                                       const QUrl& identifier,
-                                      const QSourceLocation& sourceLocation) {
-	m_messageType    = type;
-	m_description    = description;
-	m_sourceLocation = sourceLocation;
-	printMessage();
+                                      const QSourceLocation& sourceLocation)
+{
+    m_messageType    = type;
+    m_description    = description;
+    m_sourceLocation = sourceLocation;
+    printMessage();
 }
 
-void xmlMessageHandler::printMessage() const {
-	qDebug() << "\t" << m_description;
-	qDebug() << "\t" << m_sourceLocation;
+void xmlMessageHandler::printMessage() const
+{
+    qDebug() << "\t" << m_description;
+    qDebug() << "\t" << m_sourceLocation;
 }

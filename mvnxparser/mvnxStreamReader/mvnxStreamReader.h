@@ -14,7 +14,7 @@
 #ifndef MVNX_STREAM_READER_H
 #define MVNX_STREAM_READER_H
 
-#include "mvnxDataContainers.h"
+#include "xmlDataContainers.h"
 #include "xmlStreamReader.h"
 #include <QXmlStreamReader>
 #include <iostream>
@@ -24,23 +24,19 @@ namespace mvnx_ns {
 
 class mvnxStreamReader : public xmlStreamReader {
 private:
-	mvnxIContent* xmlTreeRoot;
-	vector<mvnxIContent*> elementsLIFO;
+	xmlContent* xmlTreeRoot;
+	vector<xmlContent*> elementsLIFO;
 
 public:
 	mvnxStreamReader() : xmlTreeRoot(NULL){};
 
 	// Get methods
-	mvnxIContent* getXmlTreeRoot() const { return xmlTreeRoot; };
-	std::vector<mvnxSubject*> getSubjects() const
-	{
-		mvnx* mvnxElement = static_cast<mvnx*>(xmlTreeRoot);
-		return mvnxElement->getSubjects();
-	};
+	xmlContent* getXmlTreeRoot() const { return xmlTreeRoot; };
 
 	// Exposed API for parsing and displaying the document
 	bool parse();
 	void printParsedDocument();
+	vector<xmlContent*> findElement(string elementName);
 
 private:
 	void handleStartElement(string elementName,
@@ -48,11 +44,7 @@ private:
 	void handleCharacters(string elementText);
 	void handleComment(string elementText);
 	void handleStopElement(string elementName);
-	mvnxElements_t mapStringtoElementsT(string elementLabel);
-	unordered_map<string, string>
-	processAttributes(QXmlStreamAttributes elementAttributes);
-	mvnxIContent* mapStringtoPointer(string elementLabel,
-	                                 unordered_map<string, string> attributes);
+	attributes_t processAttributes(QXmlStreamAttributes elementAttributes);
 };
 } // namespace mvnx_ns
 

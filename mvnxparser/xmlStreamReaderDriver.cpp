@@ -19,10 +19,12 @@
 
 using namespace std;
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
 	xmlStreamReader parser;
-	if (parser.setDocument("/home/dferigo/git/xml-demo-qt/Meri-020.mvnx"))
+	if (parser.setDocument("/home/dferigo/git/xml-demo-qt/Meri-020.mvnx")) {
 		cout << "Document loaded" << endl;
+	}
 
 	else {
 		cerr << "Error loading document!" << endl;

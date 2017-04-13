@@ -133,15 +133,33 @@ mvnxStreamReader::processAttributes(QXmlStreamAttributes elementAttributes)
 	return attributes;
 }
 
+bool mvnxStreamReader::elementIsEnabled(string elementName)
+{
+	// If the user didn't provide any configuration, all elements are enabled
+	if (conf.empty()) {
+		return true;
+	}
+	else {
+		try {
+			if (conf[elementName] == true)
+				return true;
+		} catch (const std::out_of_range& e) {
+			return false;
+		};
+		return false;
+	}
+}
+
 void mvnxStreamReader::handleStartElement(
           string elementName, QXmlStreamAttributes elementAttributes)
 {
-	// Create a new element object
-	xmlContent* element = new xmlContent(elementName,
-	                                     processAttributes(elementAttributes));
-
-	// Push it in the buffer
-	elementsLIFO.push_back(element);
+	if (elementIsEnabled(elementName)) {
+		// Create an istance of the new element
+		xmlContent* element = new xmlContent(
+		          elementName, processAttributes(elementAttributes));
+		// Push it in the buffer
+		elementsLIFO.push_back(element);
+	}
 }
 
 void mvnxStreamReader::handleCharacters(string elementText)
@@ -158,19 +176,22 @@ void mvnxStreamReader::handleComment(string elementText)
 
 void mvnxStreamReader::handleStopElement(string elementName)
 {
-	if (elementsLIFO.size() > 1) {
-		// Extract parent and child elements
-		IContent* lastElement = dynamic_cast<IContent*>(elementsLIFO.back());
-		IContent* secondToLastElement
-		          = dynamic_cast<IContent*>(elementsLIFO.end()[-2]);
-		assert(lastElement != NULL && secondToLastElement != NULL);
-		assert(lastElement->getElementName() == elementName);
+	if (elementIsEnabled(elementName)) {
+		if (elementsLIFO.size() > 1) {
+			// Extract parent and child elements
+			IContent* lastElement
+			          = dynamic_cast<IContent*>(elementsLIFO.back());
+			IContent* secondToLastElement
+			          = dynamic_cast<IContent*>(elementsLIFO.end()[-2]);
+			assert(lastElement != NULL && secondToLastElement != NULL);
+			assert(lastElement->getElementName() == elementName);
 
-		// Assign the child the parent element
-		secondToLastElement->setChild(lastElement);
+			// Assign the child the parent element
+			secondToLastElement->setChild(lastElement);
 
-		// Delete che assigned child from the buffer of the XML tree
-		elementsLIFO.pop_back();
+			// Delete che assigned child from the buffer of the XML tree
+			elementsLIFO.pop_back();
+		}
 	}
 }
 

@@ -59,6 +59,17 @@ int main(int argc, char* argv[])
 		// attributes.
 		// mvnx.printParsedDocument();
 
+		// Enable only some elements. If the configuration is not set, all
+		// elements are enabled by default.
+		// Be aware that specifying a configuration affects the final tree
+		// structure of the parsed object!
+		mvnxConf conf;
+		conf["mvnx"]     = true;
+		conf["subject"]  = true;
+		conf["segments"] = true;
+		conf["segment"]  = true;
+		mvnx.setConf(conf);
+
 		// Parse the MVNX
 		mvnx.parse();
 

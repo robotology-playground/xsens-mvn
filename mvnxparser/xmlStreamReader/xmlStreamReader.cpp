@@ -14,6 +14,9 @@
 
 #include "xmlStreamReader.h"
 
+using namespace std;
+using namespace xmlstream;
+
 xmlStreamReader::xmlStreamReader()
 {
     if (QCoreApplication::instance() == nullptr) {

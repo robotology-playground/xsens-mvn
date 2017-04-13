@@ -21,23 +21,24 @@
 #include <unordered_map>
 #include <vector>
 
-namespace mvnx_ns {
+namespace xmlstream {
+namespace mvnx {
 
 // Simple container of the mvnx parsing configuration.
-typedef unordered_map<string, bool> mvnxConf;
+typedef std::unordered_map<std::string, bool> mvnxConf;
 
-class mvnxStreamReader : public xmlStreamReader {
+class mvnxStreamReader : public xmlstream::xmlStreamReader {
 private:
     mvnxConf conf;
-    xmlContent* xmlTreeRoot;
-    vector<xmlContent*> elementsLIFO;
+    xmlstream::xmlContent* xmlTreeRoot;
+    std::vector<xmlstream::xmlContent*> elementsLIFO;
 
 public:
     mvnxStreamReader() : xmlTreeRoot(nullptr){};
 
     // Get methods
     mvnxConf getConf() const { return conf; };
-    xmlContent* getXmlTreeRoot() const { return xmlTreeRoot; };
+    xmlstream::xmlContent* getXmlTreeRoot() const { return xmlTreeRoot; };
 
     // Set methods
     void setConf(mvnxConf _conf) { conf = _conf; };
@@ -45,17 +46,20 @@ public:
     // Exposed API for parsing, displaying and handling the document
     bool parse();
     void printParsedDocument();
-    vector<xmlContent*> findElement(string elementName);
+    std::vector<xmlstream::xmlContent*> findElement(std::string elementName);
 
 private:
-    void handleStartElement(string elementName,
+    void handleStartElement(std::string elementName,
                             QXmlStreamAttributes elementAttributes);
-    void handleCharacters(string elementText);
-    void handleComment(string elementText);
-    void handleStopElement(string elementName);
-    bool elementIsEnabled(string elementName);
-    attributes_t processAttributes(QXmlStreamAttributes elementAttributes);
+    void handleCharacters(std::string elementText);
+    void handleComment(std::string elementText);
+    void handleStopElement(std::string elementName);
+    bool elementIsEnabled(std::string elementName);
+    xmlstream::attributes_t
+    processAttributes(QXmlStreamAttributes elementAttributes);
 };
-} // namespace mvnx_ns
+
+} // namespace mvnx
+} // namespace xmlstream
 
 #endif // MVNX_STREAM_READER_H

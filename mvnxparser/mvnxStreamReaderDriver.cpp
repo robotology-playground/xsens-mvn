@@ -20,7 +20,8 @@
 #include <vector>
 
 using namespace std;
-using namespace mvnx_ns;
+using namespace xmlstream;
+using namespace xmlstream::mvnx;
 
 bool file_exist(const char* fileName)
 {
@@ -36,12 +37,25 @@ int main(int argc, char* argv[])
              << endl;
         return 1;
     }
-    assert(file_exist(argv[1]));
-    assert(file_exist(argv[2]));
 
+    if (not file_exist(argv[1])) {
+        cerr << "Document file doesn't exist!" << endl;
+        return 1;
+    }
+    if (not file_exist(argv[2])) {
+        cerr << "Schema file doesn't exist!" << endl;
+        return 1;
+    }
+
+    // Load the document and set the validation schema
     mvnxStreamReader mvnx;
-    assert(mvnx.setDocument(argv[1]));
-    mvnx.setSchema(argv[2]);
+    if (mvnx.setDocument(argv[1])) {
+        mvnx.setSchema(argv[2]);
+    }
+    else {
+        cerr << "Failed to load the document!" << endl;
+        return 1;
+    }
 
     // Note:
     // - If you call methods from a mvnxStreamReader object, you get xmlContent
@@ -93,7 +107,7 @@ int main(int argc, char* argv[])
         // allows finding iteratively all the elements with the same name.
         // It calls the findChildElements() method from the xmlContent class.
 
-        // - Passing through the mvnxStreamReader object
+        // - Passing through the mvnxStreamReader object (preferred)
         vector<xmlContent*> segment1 = mvnx.findElement("segment");
 
         cout << "Get segments using the mvnxStreamReader object:" << endl;
@@ -109,14 +123,5 @@ int main(int argc, char* argv[])
         for (auto segment : segment1) {
             cout << segment->getAttribute("label") << endl;
         }
-        // cout << comments1.size() << " " << comments2.size() << endl;
-
-        // Print extracted information, e.g. the segments names
-        // cout << endl << "Segments labels of the first subject are:" << endl;
-        // for (auto segment : segments) {
-        // 	cout << "\t" << segment->getAttributes()["label"] << endl;
-        // }
+        else return 1;
     }
-    else
-        return 1;
-}

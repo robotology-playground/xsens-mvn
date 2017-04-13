@@ -18,6 +18,7 @@
 #include <vector>
 
 using namespace std;
+using namespace xmlstream;
 
 int main(int argc, char* argv[])
 {

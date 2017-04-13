@@ -14,8 +14,9 @@
 
 #include "mvnxStreamReader.h"
 
-using namespace mvnx_ns;
 using namespace std;
+using namespace xmlstream;
+using namespace xmlstream::mvnx;
 
 void mvnxStreamReader::printParsedDocument()
 {

@@ -26,7 +26,7 @@
 #include <string>
 #include <vector>
 
-using namespace std;
+namespace xmlstream {
 
 class xmlStreamReader {
 private:
@@ -43,13 +43,15 @@ protected:
 
 public:
     xmlStreamReader();
-    xmlStreamReader(string documentFile);
-    xmlStreamReader(string documentFile, string schemaFile);
-    bool setDocument(string documentFile);
-    bool setSchema(string schemaFile);
+    xmlStreamReader(std::string documentFile);
+    xmlStreamReader(std::string documentFile, std::string schemaFile);
+    bool setDocument(std::string documentFile);
+    bool setSchema(std::string schemaFile);
     void setXmlMessageHandler(xmlMessageHandler& _handler);
     bool validate();
     virtual ~xmlStreamReader();
 };
+
+} // namespace xmlstream
 
 #endif // XML_STREAM_READER_H

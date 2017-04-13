@@ -22,6 +22,7 @@ env:
   global:
    - PROJECT_DIR_ABS=$TRAVIS_BUILD_DIR
    - YARP_DOCKER_TAG="bin"
+   - DOCKER_IMAGE="robotology/yarp-tdd:gazebo8${YARP_DOCKER_TAG}"
 
 matrix:
   include:
@@ -41,8 +42,18 @@ before_install:
       brew tap robotology/cask || travis_terminate 1
       brew tap homebrew/science || travis_terminate 1
       brew install eigen yarp || travis_terminate 1
+      brew install qt || travis_terminate 1
+      export PATH="/usr/local/opt/qt/bin/:$PATH"
     elif [[ "$TRAVIS_OS_NAME" = "linux" ]] ; then
       docker pull robotology/yarp-tdd:gazebo8${YARP_DOCKER_TAG} || travis_terminate 1
+      docker run -it \
+        --name baseimage \
+        $DOCKER_IMAGE \
+        sh -c 'export CMAKE_PREFIX_PATH="/usr/lib/x86_64-linux-gnu/cmake/:${CMAKE_PREFIX_PATH}" &&\
+          apt-get update &&\
+          apt-get install -y qtbase5-dev libqt5xmlpatterns5-dev' \
+        || travis_terminate 1
+        docker commit baseimage imagewithdeps || travis_terminate 1
     fi
 
 before_script:
@@ -61,7 +72,7 @@ before_script:
         -v "$PROJECT_DIR_ABS:/app" -w /app \
         -e CC=$CC \
         -e CXX=$CXX \
-        robotology/yarp-tdd:gazebo8${YARP_DOCKER_TAG} \
+        imagewithdeps \
         sh -c 'cd build && cmake -DCMAKE_BUILD_TYPE=${TRAVIS_BUILD_TYPE} ..' \
         || travis_terminate 1
     fi
@@ -78,7 +89,7 @@ script:
         -v "$PROJECT_DIR_ABS:/app" -w /app \
         -e CC=$CC \
         -e CXX=$CXX \
-        robotology/yarp-tdd:gazebo8${YARP_DOCKER_TAG} \
+        imagewithdeps \
         sh -c 'cd build && cmake --build . --config ${TRAVIS_BUILD_TYPE}' \
         || travis_terminate 1
     fi
@@ -95,7 +106,7 @@ after_success:
         -v "$PROJECT_DIR_ABS:/app" -w /app \
         -e CC=$CC \
         -e CXX=$CXX \
-        robotology/yarp-tdd:gazebo8${YARP_DOCKER_TAG} \
+        imagewithdeps \
         sh -c 'cd build && cmake --build . --config ${TRAVIS_BUILD_TYPE} --target install' \
         || travis_terminate 1
     fi

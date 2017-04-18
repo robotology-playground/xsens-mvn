@@ -9,7 +9,7 @@
  * @file mvnxStreamReaderDriver.cpp
  * @brief Driver for the xmlStreamReader class
  * @author Diego Ferigo
- * @date 12/04/2017
+ * @date 18/04/2017
  */
 
 #include "mvnxStreamReader.h"
@@ -58,12 +58,14 @@ int main(int argc, char* argv[])
     }
 
     // Note:
-    // - If you call methods from a mvnxStreamReader object, you get xmlContent
-    //   objects (either objects and pointers)
-    // - If you call methods from a xmlContent object, you get IContent* and
-    //   vector<IContent*>* objects (its polymorphic type). You can always
-    //   dynamic_cast it back to xmlContent if you need to access methods that
-    //   only xmlContent has.
+    //
+    // - The API of xmlContent return variables based on the IContent type
+    // - The API of mvnxStreamReader return variables based on the xmlContent
+    //   type
+    //
+    // Since IContent is an abstract class and objects can't be instantiated
+    // from it, you can always cast IContent objects to xmlContent ones if you
+    // need to access methods that only xmlContent contains.
 
     // Validate the document with the provided schema and, if successful,
     // parse it.
@@ -75,10 +77,10 @@ int main(int argc, char* argv[])
 
         // Enable only some elements. If the configuration is not set, all
         // elements are enabled by default.
-        // Be aware that specifying a configuration affects the final tree
+        // Be aware that specifying a configuration alters the final tree
         // structure of the parsed object!
         mvnxConf conf;
-        conf["mvnx"]     = true;
+        conf["mvnx"]     = true; // Root element
         conf["subject"]  = true;
         conf["segments"] = true;
         conf["segment"]  = true;
@@ -88,15 +90,15 @@ int main(int argc, char* argv[])
         mvnx.parse();
 
         // Get the pointer to the tree's root element
-        xmlContent* xmlRoot = mvnx.getXmlTreeRoot();
+        xmlContentPtrS xmlRoot = mvnx.getXmlTreeRoot();
 
         // Extract a field, e.g. the print all the segments and their origin
-        IContent* segments = xmlRoot->getChildElement("subject")
-                                       ->front()
-                                       ->getChildElement("segments")
-                                       ->front();
-        vector<IContent*>* segmentVector = segments->getChildElement("segment");
-
+        IContentPtrS segments = xmlRoot->getChildElement("subject")
+                                          ->front()
+                                          ->getChildElement("segments")
+                                          ->front();
+        IContentVecPtrS segmentVector = segments->getChildElement("segment");
+        //
         cout << "Get segments sweeping the XML tree:" << endl;
         for (auto segment : *segmentVector) {
             cout << segment->getAttribute("label") << endl;
@@ -105,11 +107,13 @@ int main(int argc, char* argv[])
 
         // The class mvnxStreeamReader has an utility method findElement() that
         // allows finding iteratively all the elements with the same name.
-        // It calls the findChildElements() method from the xmlContent class.
+        // It calls the findChildElements() method from the xmlContent class,
+        // and the only difference is that mvnxStreamReader cast the obtained
+        // matches to xmlContent.
 
         // - Passing through the mvnxStreamReader object (preferred)
-        vector<xmlContent*> segment1 = mvnx.findElement("segment");
-
+        vector<xmlContentPtrS> segment1 = mvnx.findElement("segment");
+        //
         cout << "Get segments using the mvnxStreamReader object:" << endl;
         for (auto segment : segment1) {
             cout << segment->getAttribute("label") << endl;
@@ -117,11 +121,15 @@ int main(int argc, char* argv[])
         cout << endl;
 
         // - Passing through the xmlContent object
-        vector<IContent*> segment2 = xmlRoot->findChildElements("segment");
-
+        vector<IContentPtrS> segment2 = xmlRoot->findChildElements("segment");
+        //
         cout << "Get segments using the xmlContent object:" << endl;
-        for (auto segment : segment1) {
+        for (auto segment : segment2) {
             cout << segment->getAttribute("label") << endl;
         }
-        else return 1;
     }
+    else {
+        return 1;
+    }
+    return 0;
+}

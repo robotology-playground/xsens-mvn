@@ -9,7 +9,7 @@
  * @file mvnxStreamReader.cpp
  * @brief Validate and parse efficiently mvnx files
  * @author Diego Ferigo
- * @date 12/04/2017
+ * @date 18/04/2017
  */
 
 #include "mvnxStreamReader.h"
@@ -111,7 +111,9 @@ bool mvnxStreamReader::parse()
                 handleStopElement(elementName);
                 break;
             case QXmlStreamReader::EndDocument:
-                xmlTreeRoot = dynamic_cast<xmlContent*>(elementsLIFO.front());
+                xmlTreeRoot = elementsLIFO.front();
+                elementsLIFO.pop_back();
+                assert(elementsLIFO.empty());
                 break;
             default:
                 break;
@@ -126,6 +128,9 @@ mvnxStreamReader::processAttributes(QXmlStreamAttributes elementAttributes)
     attributes_t attributes;
     if (not elementAttributes.empty()) {
         for (auto element : elementAttributes) {
+            assert(element.name().toString().toStdString().length() != 0);
+            assert(element.value().toString().toStdString().length() != 0);
+            // Process the attribute
             attributes[element.name().toString().toStdString()]
                       = element.value().toString().toStdString();
         }
@@ -154,17 +159,17 @@ void mvnxStreamReader::handleStartElement(
           string elementName, QXmlStreamAttributes elementAttributes)
 {
     if (elementIsEnabled(elementName)) {
-        // Create an istance of the new element
-        xmlContent* element = new xmlContent(
+        // Create a new object and handle it with smart pointers
+        IContentPtrS element = make_shared<xmlContent>(
                   elementName, processAttributes(elementAttributes));
-        // Push it in the buffer
+        // Push it in the buffer of pointers
         elementsLIFO.push_back(element);
     }
 }
 
 void mvnxStreamReader::handleCharacters(string elementText)
 {
-    xmlContent* lastElement = elementsLIFO.back();
+    IContentPtrS lastElement = elementsLIFO.back();
     assert(lastElement != nullptr);
     lastElement->setText(elementText);
 }
@@ -179,11 +184,9 @@ void mvnxStreamReader::handleStopElement(string elementName)
     if (elementIsEnabled(elementName)) {
         if (elementsLIFO.size() > 1) {
             // Extract parent and child elements
-            IContent* lastElement
-                      = dynamic_cast<IContent*>(elementsLIFO.back());
-            IContent* secondToLastElement
-                      = dynamic_cast<IContent*>(elementsLIFO.end()[-2]);
-            assert(lastElement != nullptr && secondToLastElement != nullptr);
+            IContentPtrS lastElement         = elementsLIFO.back();
+            IContentPtrS secondToLastElement = elementsLIFO.end()[-2];
+            assert(lastElement && secondToLastElement); // Are not nullptr
             assert(lastElement->getElementName() == elementName);
 
             // Assign the child the parent element
@@ -195,18 +198,21 @@ void mvnxStreamReader::handleStopElement(string elementName)
     }
 }
 
-vector<xmlContent*> mvnxStreamReader::findElement(string elementName)
+vector<xmlContentPtrS> mvnxStreamReader::findElement(string elementName)
 {
-    vector<xmlContent*> childElementsCasted;
-    if (xmlTreeRoot != nullptr) {
-        vector<IContent*> childElements
+    vector<xmlContentPtrS> childElementsCast;
+    assert(xmlTreeRoot); // Not nullptr
+    if (xmlTreeRoot) {
+        vector<IContentPtrS> childElements
                   = xmlTreeRoot->findChildElements(elementName);
-        childElementsCasted.resize(childElements.size());
+        childElementsCast.resize(childElements.size());
         // Cast to xmlContent the vector's item using a lambda expression
         transform(childElements.begin(),
                   childElements.end(),
-                  childElementsCasted.begin(),
-                  [](IContent* e) { return dynamic_cast<xmlContent*>(e); });
+                  childElementsCast.begin(),
+                  [](IContentPtrS e) {
+                      return dynamic_pointer_cast<xmlContent>(e);
+                  });
     }
-    return childElementsCasted;
+    return childElementsCast;
 }

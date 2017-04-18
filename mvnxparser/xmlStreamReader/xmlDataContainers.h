@@ -9,7 +9,7 @@
  * @file xmlDataContainers.cpp
  * @brief Base classes for handling TEXT and CONTENT xml elements
  * @author Diego Ferigo
- * @date 12/04/2017
+ * @date 18/04/2017
  */
 
 #ifndef XML_DATA_CONTAINERS_H
@@ -17,6 +17,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -41,19 +42,35 @@ enum content_t
 // IContent will provide the base polymorphic type to handle both classes.
 //
 class IContent;
+class xmlContent;
+
+// Aliases for pointers to XML elements
+// Useful expecially for the client side
+typedef std::shared_ptr<IContent> IContentPtrS;
+typedef std::shared_ptr<xmlContent> xmlContentPtrS;
+template <typename T>
+using vector_ptr = std::shared_ptr<std::vector<T>>;
+typedef vector_ptr<IContentPtrS> IContentVecPtrS;
+typedef vector_ptr<xmlContentPtrS> xmlContentVecPtrS;
 
 // Some useful typedefs for readability
+// Used internally
 typedef IContent child_t;
+typedef std::shared_ptr<child_t> child_ptr;
+//
 typedef std::string elementName;
 typedef std::string attributeName;
 typedef std::string attributeValue;
-typedef std::unordered_map<elementName, std::vector<child_t*>> children_t;
+//
+typedef std::unordered_map<elementName, vector_ptr<child_ptr>> children_t;
+typedef std::shared_ptr<children_t> children_ptr;
 typedef std::unordered_map<attributeName, attributeValue> attributes_t;
 
+// This is an abstract class that offers an interface for polymorphic usage
 class IContent {
 protected:
     std::string text;
-    children_t children;
+    children_ptr children;
     elementName element;
     content_t content_type;
     attributes_t attributes;
@@ -64,32 +81,32 @@ public:
     IContent(elementName _element, attributes_t _attributes)
         : element(_element), attributes(_attributes){};
 
-    // Destructor (Enable polymorphism)
+    // Destructor
     virtual ~IContent() = default;
 
     // Get method(s)
-    virtual std::string getText() const                                  = 0;
-    virtual content_t getContentType() const                             = 0;
-    virtual elementName getElementName() const                           = 0;
-    virtual attributes_t getAttributes() const                           = 0;
-    virtual attributeValue getAttribute(attributeName _attribute)        = 0;
-    virtual children_t* getChildElements()                               = 0;
-    virtual std::vector<child_t*>* getChildElement(elementName _element) = 0;
+    virtual std::string getText() const                                 = 0;
+    virtual content_t getContentType() const                            = 0;
+    virtual elementName getElementName() const                          = 0;
+    virtual attributes_t getAttributes() const                          = 0;
+    virtual attributeValue getAttribute(attributeName _attribute)       = 0;
+    virtual children_ptr getChildElements()                             = 0;
+    virtual vector_ptr<child_ptr> getChildElement(elementName _element) = 0;
 
     // Set method(s)
     virtual void setText(std::string _text)              = 0;
-    virtual void setChild(child_t*& _childContent)       = 0;
+    virtual void setChild(child_ptr _childContent)       = 0;
     virtual void setAttributes(attributes_t _attributes) = 0;
 
     // Other methods
-    virtual std::vector<child_t*> findChildElements(elementName _element) = 0;
+    virtual std::vector<child_ptr> findChildElements(elementName _element) = 0;
 };
 
-// This class implements IContent in order to be used for TEXT XML entries.
-// It adds text storage support.
+// This class handles both ELEMENT and TEXT xml content.
 class xmlContent : public IContent {
 public:
     // Constructor(s)
+    xmlContent() = default;
     xmlContent(elementName _element) : IContent(_element){};
     xmlContent(elementName _element, attributes_t _attributes)
         : IContent(_element, _attributes){};
@@ -111,11 +128,11 @@ public:
             return std::string();
         }
     };
-    virtual children_t* getChildElements() { return &children; }
-    virtual std::vector<child_t*>* getChildElement(elementName _element)
+    virtual children_ptr getChildElements() { return children; }
+    virtual vector_ptr<child_ptr> getChildElement(elementName _element)
     {
-        if (children.find(_element) != children.end()) {
-            return &children[_element];
+        if (children->find(_element) != children->end()) {
+            return children->at(_element);
         }
         else {
             assert(0); // If Debug mode, notify that the accessed element
@@ -134,19 +151,29 @@ public:
         // Set the text
         text = _text;
     };
-    virtual void setChild(child_t*& _childContent)
+    virtual void setChild(child_ptr _childContent)
     {
         // If setChild() is called, it means that this element has a ELEMENT
         // content
         content_type = ELEMENT;
 
+        // If this is the first initialization, create the object and its
+        // shared_pointer
+        if (not children) { // not a nullptr
+            children = std::make_shared<children_t>();
+        }
+
         // Set the child
         // If there are no children of the same type, create a new entry
-        if (children.find(_childContent->getElementName()) == children.end()) {
-            children[_childContent->getElementName()] = std::vector<child_t*>();
+        if (children->find(_childContent->getElementName())
+            == children->end()) {
+            children->insert(std::make_pair(
+                      _childContent->getElementName(),
+                      std::make_shared<std::vector<child_ptr>>()));
         }
+
         // Add the new children to the vector of the children of the same type
-        children[_childContent->getElementName()].push_back(_childContent);
+        children->at(_childContent->getElementName())->push_back(_childContent);
     };
     virtual void setAttributes(attributes_t _attributes)
     {
@@ -154,26 +181,30 @@ public:
     };
 
     // Other methods
-    virtual std::vector<child_t*> findChildElements(elementName _element)
+    virtual std::vector<child_ptr> findChildElements(elementName _element)
     {
-        std::vector<child_t*> foundElements;
-        std::vector<child_t*> foundElementsInChild;
+        std::vector<child_ptr> foundElements;
+        std::vector<child_ptr> foundElementsInChild;
 
         // For every branch
-        for (auto child_vector : children) {
-            // Reach its last leaf recursively
-            for (auto child : child_vector.second) {
-                foundElementsInChild = child->findChildElements(_element);
-                // Save all the matches in this branch of the tree
-                foundElements.insert(foundElements.end(),
-                                     foundElementsInChild.begin(),
-                                     foundElementsInChild.end());
+        if (children) { // Not a nullptr
+            for (auto child_element_map : *children) {
+                // Reach its last leaf recursively
+                for (auto child_element : *(child_element_map.second)) {
+                    // Get the matches from the children
+                    foundElementsInChild
+                              = child_element->findChildElements(_element);
+                    // Save all the matches of this branch of the tree
+                    foundElements.insert(foundElements.end(),
+                                         foundElementsInChild.begin(),
+                                         foundElementsInChild.end());
+                    // Add the children itself if it matches the wanted
+                    // element
+                    if (child_element->getElementName() == _element) {
+                        foundElements.push_back(child_element);
+                    };
+                }
             }
-        }
-
-        // Insert the current object pointer in the tree vector
-        if (getElementName() == _element) {
-            foundElements.push_back(this);
         }
         return foundElements;
     };

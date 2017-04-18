@@ -9,7 +9,7 @@
  * @file mvnxStreamReader.h
  * @brief Validate and parse efficiently mvnx files
  * @author Diego Ferigo
- * @date 12/04/2017
+ * @date 18/04/2017
  */
 #ifndef MVNX_STREAM_READER_H
 #define MVNX_STREAM_READER_H
@@ -18,6 +18,7 @@
 #include "xmlStreamReader.h"
 #include <QXmlStreamReader>
 #include <iostream>
+#include <memory>
 #include <unordered_map>
 #include <vector>
 
@@ -30,15 +31,19 @@ typedef std::unordered_map<std::string, bool> mvnxConf;
 class mvnxStreamReader : public xmlstream::xmlStreamReader {
 private:
     mvnxConf conf;
-    xmlstream::xmlContent* xmlTreeRoot;
-    std::vector<xmlstream::xmlContent*> elementsLIFO;
+    IContentPtrS xmlTreeRoot;
+    std::vector<IContentPtrS> elementsLIFO;
 
 public:
     mvnxStreamReader() : xmlTreeRoot(nullptr){};
+    ~mvnxStreamReader() = default;
 
     // Get methods
     mvnxConf getConf() const { return conf; };
-    xmlstream::xmlContent* getXmlTreeRoot() const { return xmlTreeRoot; };
+    xmlContentPtrS getXmlTreeRoot() const
+    {
+        return std::dynamic_pointer_cast<xmlContent>(xmlTreeRoot);
+    };
 
     // Set methods
     void setConf(mvnxConf _conf) { conf = _conf; };
@@ -46,7 +51,7 @@ public:
     // Exposed API for parsing, displaying and handling the document
     bool parse();
     void printParsedDocument();
-    std::vector<xmlstream::xmlContent*> findElement(std::string elementName);
+    std::vector<xmlContentPtrS> findElement(std::string elementName);
 
 private:
     void handleStartElement(std::string elementName,

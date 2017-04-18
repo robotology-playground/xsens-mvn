@@ -7,7 +7,7 @@
 
 /**
  * @file mvnxStreamReaderDriver.cpp
- * @brief Driver for the xmlStreamReader class
+ * @brief Driver for the mvnxStreamReader class
  * @author Diego Ferigo
  * @date 18/04/2017
  */
@@ -84,6 +84,7 @@ int main(int argc, char* argv[])
         conf["subject"]  = true;
         conf["segments"] = true;
         conf["segment"]  = true;
+        conf["comment"]  = true;
         mvnx.setConf(conf);
 
         // Parse the MVNX
@@ -92,7 +93,7 @@ int main(int argc, char* argv[])
         // Get the pointer to the tree's root element
         xmlContentPtrS xmlRoot = mvnx.getXmlTreeRoot();
 
-        // Extract a field, e.g. the print all the segments and their origin
+        // Extract a field, e.g. print all the names of segments
         IContentPtrS segments = xmlRoot->getChildElement("subject")
                                           ->front()
                                           ->getChildElement("segments")
@@ -105,7 +106,7 @@ int main(int argc, char* argv[])
         }
         cout << endl;
 
-        // The class mvnxStreeamReader has an utility method findElement() that
+        // The class mvnxStreamReader has an utility method findElement() that
         // allows finding iteratively all the elements with the same name.
         // It calls the findChildElements() method from the xmlContent class,
         // and the only difference is that mvnxStreamReader cast the obtained
@@ -126,6 +127,15 @@ int main(int argc, char* argv[])
         cout << "Get segments using the xmlContent object:" << endl;
         for (auto segment : segment2) {
             cout << segment->getAttribute("label") << endl;
+        }
+        cout << endl;
+
+        // Example of gathering information from a xml element with TEXT content
+        vector<xmlContentPtrS> comments = mvnx.findElement("comment");
+        //
+        cout << "Get comments as an example for TEXT content elements:" << endl;
+        for (auto comment : comments) {
+            cout << comment->getText() << endl;
         }
     }
     else {

@@ -6,7 +6,7 @@
 find_package(Qt5Xml REQUIRED)
 
 # Build the libraries
-add_library(mvnxStreamReader STATIC mvnxStreamReader.cpp)
+add_library(mvnxStreamReader mvnxStreamReader.cpp)
 
 # Link the libraries used by this library
 target_link_libraries(mvnxStreamReader xmlStreamReader)

@@ -2,7 +2,7 @@
 # Author: Diego Ferigo
 # CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
 
-set(ENABLE_mvnx_parser ON CACHE BOOL "Enable the Qt-based XML parser")
+option(ENABLE_mvnx_parser "Enable the Qt-based XML parser" ON)
 
 if(ENABLE_mvnx_parser)
 

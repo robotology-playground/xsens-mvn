@@ -6,24 +6,46 @@
  */
 
 /**
- * @file xmlStreamReaderDriver.cpp
- * @brief Driver for the xmlStreamReader class
+ * @file XMLStreamReaderDriver.cpp
+ * @brief Driver for the XMLStreamReader class
  * @author Diego Ferigo
  * @date 06/04/2017
  */
 
-#include "xmlStreamReader.h"
+#include "XMLStreamReader.h"
 #include <cassert>
+#include <fstream>
 #include <iostream>
 #include <vector>
 
 using namespace std;
 using namespace xmlstream;
 
+bool file_exist(const char* fileName)
+{
+    ifstream infile(fileName);
+    return infile.good();
+}
+
 int main(int argc, char* argv[])
 {
-    xmlStreamReader parser;
-    if (parser.setDocument("/home/dferigo/git/xml-demo-qt/Meri-020.mvnx")) {
+    if (argc != 3) {
+        cerr << "Usage: " << argv[0] << " /path/to/file.xml /path/to/schema.xsd"
+             << endl
+             << endl;
+        return 1;
+    }
+    if (not file_exist(argv[1])) {
+        cerr << "Document file doesn't exist!" << endl;
+        return 1;
+    }
+    if (not file_exist(argv[2])) {
+        cerr << "Schema file doesn't exist!" << endl;
+        return 1;
+    }
+
+    XMLStreamReader parser;
+    if (parser.setDocument(argv[1])) {
         cout << "Document loaded" << endl;
     }
 
@@ -32,7 +54,7 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    if (parser.setSchema("/home/dferigo/git/xml-demo-qt/schema.xsd"))
+    if (parser.setSchema(argv[2]))
         cout << "Schema loaded and valid" << endl;
 
     else {

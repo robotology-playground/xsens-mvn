@@ -6,62 +6,68 @@
  */
 
 /**
- * @file xmlStreamReader.cpp
+ * @file XMLStreamReader.cpp
  * @brief Validate and parse efficiently big XML documents
  * @author Diego Ferigo
- * @date 06/04/2017
+ * @date 19/04/2017
  */
 
-#include "xmlStreamReader.h"
+#include "XMLStreamReader.h"
 
 using namespace std;
 using namespace xmlstream;
 
-xmlStreamReader::xmlStreamReader()
+XMLStreamReader::XMLStreamReader() : XMLStreamReader(string(), string())
+{
+}
+
+XMLStreamReader::XMLStreamReader(string documentFile)
+    : XMLStreamReader(documentFile, string())
+{
+}
+
+XMLStreamReader::XMLStreamReader(string documentFile, string schemaFile)
 {
     if (QCoreApplication::instance() == nullptr) {
         dummyArgc = 1;
         dummyArgv = new char[1]{' '};
         coreApp   = new QCoreApplication(dummyArgc, &dummyArgv);
     }
-}
-xmlStreamReader::xmlStreamReader(string documentFile) : xmlStreamReader()
-{
-    setDocument(documentFile);
+    if (!documentFile.empty()) {
+        setDocument(documentFile);
+    }
+
+    if (!schemaFile.empty()) {
+        setSchema(schemaFile);
+    }
 }
 
-xmlStreamReader::xmlStreamReader(string documentFile, string schemaFile)
-    : xmlStreamReader(documentFile)
-{
-    setSchema(schemaFile);
-}
-
-bool xmlStreamReader::setDocument(string documentFile)
+bool XMLStreamReader::setDocument(string documentFile)
 {
     xmlFile.setFileName(QString(documentFile.c_str()));
     return xmlFile.open(QIODevice::ReadOnly);
 }
 
-bool xmlStreamReader::setSchema(string schemaFile)
+bool XMLStreamReader::setSchema(string schemaFile)
 {
     setXmlMessageHandler(handler);
     schemaUrl = QUrl(("file://" + schemaFile).c_str());
     return schema.load(schemaUrl);
 }
 
-void xmlStreamReader::setXmlMessageHandler(xmlMessageHandler& _handler)
+void XMLStreamReader::setXmlMessageHandler(XMLMessageHandler& _handler)
 {
     schema.setMessageHandler(&_handler);
 }
 
-bool xmlStreamReader::validate()
+bool XMLStreamReader::validate()
 {
     QXmlSchemaValidator validator(schema);
     if (not xmlFile.isOpen())
         xmlFile.open(QIODevice::ReadOnly);
     return validator.validate(&xmlFile, schemaUrl);
 }
-xmlStreamReader::~xmlStreamReader()
+XMLStreamReader::~XMLStreamReader()
 {
     delete coreApp;
 }

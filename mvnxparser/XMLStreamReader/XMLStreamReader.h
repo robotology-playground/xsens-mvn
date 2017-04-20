@@ -6,7 +6,7 @@
  */
 
 /**
- * @file xmlStreamReader.h
+ * @file XMLStreamReader.h
  * @brief Validate and parse efficiently big XML documents
  * @author Diego Ferigo
  * @date 06/04/2017
@@ -15,7 +15,7 @@
 #ifndef XML_STREAM_READER_H
 #define XML_STREAM_READER_H
 
-#include "xmlMessageHandler.h"
+#include "XMLMessageHandler.h"
 #include <QXmlSchema>
 #include <QXmlSchemaValidator>
 #include <QtXml>
@@ -28,7 +28,7 @@
 
 namespace xmlstream {
 
-class xmlStreamReader {
+class XMLStreamReader {
 private:
     QCoreApplication* coreApp;
     int dummyArgc;
@@ -38,18 +38,18 @@ protected:
     QFile xmlFile;
     QUrl schemaUrl;
     QXmlSchema schema;
-    xmlMessageHandler handler;
+    XMLMessageHandler handler;
     bool virtual parse() { return true; };
 
 public:
-    xmlStreamReader();
-    xmlStreamReader(std::string documentFile);
-    xmlStreamReader(std::string documentFile, std::string schemaFile);
+    XMLStreamReader();
+    XMLStreamReader(std::string documentFile);
+    XMLStreamReader(std::string documentFile, std::string schemaFile);
     bool setDocument(std::string documentFile);
     bool setSchema(std::string schemaFile);
-    void setXmlMessageHandler(xmlMessageHandler& _handler);
+    void setXmlMessageHandler(XMLMessageHandler& _handler);
     bool validate();
-    virtual ~xmlStreamReader();
+    virtual ~XMLStreamReader();
 };
 
 } // namespace xmlstream

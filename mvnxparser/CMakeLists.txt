@@ -7,15 +7,15 @@ option(ENABLE_mvnx_parser "Enable the Qt-based XML parser" ON)
 if(ENABLE_mvnx_parser)
 
     # Build libraries
-    add_subdirectory(xmlStreamReader)
-    add_subdirectory(mvnxStreamReader)
+    add_subdirectory(XMLStreamReader)
+    add_subdirectory(MVNXStreamReader)
 
     # Build the executables
     # XML
-    add_executable(xmlStreamReaderDriver xmlStreamReaderDriver.cpp)
-    target_link_libraries(xmlStreamReaderDriver xmlStreamReader)
+    add_executable(XMLStreamReaderDriver XMLStreamReaderDriver.cpp)
+    target_link_libraries(XMLStreamReaderDriver XMLStreamReader)
     # MNVX
-    add_executable(mvnxStreamReaderDriver mvnxStreamReaderDriver.cpp)
-    target_link_libraries(mvnxStreamReaderDriver mvnxStreamReader)
+    add_executable(MVNXStreamReaderDriver MVNXStreamReaderDriver.cpp)
+    target_link_libraries(MVNXStreamReaderDriver MVNXStreamReader)
 
 endif()

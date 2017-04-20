@@ -6,11 +6,11 @@
 find_package(Qt5Xml REQUIRED)
 
 # Build the libraries
-add_library(mvnxStreamReader mvnxStreamReader.cpp)
+add_library(MVNXStreamReader MVNXStreamReader.cpp)
 
 # Link the libraries used by this library
-target_link_libraries(mvnxStreamReader xmlStreamReader)
-qt5_use_modules(mvnxStreamReader Xml)
+target_link_libraries(MVNXStreamReader XMLStreamReader)
+qt5_use_modules(MVNXStreamReader Xml)
 
 # Export the includes needed to who inherits this library
-target_include_directories(mvnxStreamReader INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(MVNXStreamReader INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})

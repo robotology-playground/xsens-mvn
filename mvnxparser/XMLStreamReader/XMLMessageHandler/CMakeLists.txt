@@ -6,10 +6,10 @@
 find_package(Qt5XmlPatterns REQUIRED)
 
 # Build the library
-add_library(xmlMessageHandler xmlMessageHandler.cpp)
+add_library(XMLMessageHandler XMLMessageHandler.cpp)
 
 # Include directories and export them to who inherits this library
-target_include_directories(xmlMessageHandler INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(XMLMessageHandler INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Use QT Modules
-qt5_use_modules(xmlMessageHandler XmlPatterns)
+qt5_use_modules(XMLMessageHandler XmlPatterns)

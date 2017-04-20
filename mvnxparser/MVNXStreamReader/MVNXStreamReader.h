@@ -6,7 +6,7 @@
  */
 
 /**
- * @file mvnxStreamReader.h
+ * @file MVNXStreamReader.h
  * @brief Validate and parse efficiently mvnx files
  * @author Diego Ferigo
  * @date 18/04/2017
@@ -14,8 +14,8 @@
 #ifndef MVNX_STREAM_READER_H
 #define MVNX_STREAM_READER_H
 
-#include "xmlDataContainers.h"
-#include "xmlStreamReader.h"
+#include "XMLDataContainers.h"
+#include "XMLStreamReader.h"
 #include <QXmlStreamReader>
 #include <iostream>
 #include <memory>
@@ -26,40 +26,37 @@ namespace xmlstream {
 namespace mvnx {
 
 // Simple container of the mvnx parsing configuration.
-typedef std::unordered_map<std::string, bool> mvnxConf;
+typedef std::unordered_map<std::string, bool> MVNXConfiguration;
 
-class mvnxStreamReader : public xmlstream::xmlStreamReader {
+class MVNXStreamReader : public xmlstream::XMLStreamReader {
 private:
-    mvnxConf conf;
-    IContentPtrS xmlTreeRoot;
+    MVNXConfiguration conf;
+    IContentPtrS XMLTreeRoot;
     std::vector<IContentPtrS> elementsLIFO;
 
 public:
-    mvnxStreamReader() : xmlTreeRoot(nullptr){};
-    ~mvnxStreamReader() = default;
+    MVNXStreamReader() : XMLTreeRoot(nullptr) {}
+    ~MVNXStreamReader() = default;
 
     // Get methods
-    mvnxConf getConf() const { return conf; };
-    xmlContentPtrS getXmlTreeRoot() const
-    {
-        return std::dynamic_pointer_cast<xmlContent>(xmlTreeRoot);
-    };
+    MVNXConfiguration getConf() const { return conf; }
+    XMLContentPtrS getXmlTreeRoot() const;
 
     // Set methods
-    void setConf(mvnxConf _conf) { conf = _conf; };
+    void setConf(MVNXConfiguration _conf) { conf = _conf; }
 
     // Exposed API for parsing, displaying and handling the document
     bool parse();
     void printParsedDocument();
-    std::vector<xmlContentPtrS> findElement(std::string elementName);
+    std::vector<XMLContentPtrS> findElement(std::string ElementName);
 
 private:
-    void handleStartElement(std::string elementName,
+    void handleStartElement(std::string ElementName,
                             QXmlStreamAttributes elementAttributes);
     void handleCharacters(std::string elementText);
     void handleComment(std::string elementText);
-    void handleStopElement(std::string elementName);
-    bool elementIsEnabled(std::string elementName);
+    void handleStopElement(std::string ElementName);
+    bool elementIsEnabled(std::string ElementName);
     xmlstream::attributes_t
     processAttributes(QXmlStreamAttributes elementAttributes);
 };

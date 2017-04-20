@@ -6,15 +6,15 @@
  */
 
 /**
- * @file xmlMessageHandler.cpp
+ * @file XMLMessageHandler.cpp
  * @brief Handle XML error with a custom format
  * @author Diego Ferigo
  * @date 06/04/2017
  */
 
-#include "xmlMessageHandler.h"
+#include "XMLMessageHandler.h"
 
-void xmlMessageHandler::handleMessage(QtMsgType type,
+void XMLMessageHandler::handleMessage(QtMsgType type,
                                       const QString& description,
                                       const QUrl& identifier,
                                       const QSourceLocation& sourceLocation)
@@ -25,7 +25,7 @@ void xmlMessageHandler::handleMessage(QtMsgType type,
     printMessage();
 }
 
-void xmlMessageHandler::printMessage() const
+void XMLMessageHandler::printMessage() const
 {
     qDebug() << "\t" << m_description;
     qDebug() << "\t" << m_sourceLocation;

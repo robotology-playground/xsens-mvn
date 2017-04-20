@@ -6,7 +6,7 @@
  */
 
 /**
- * @file xmlMessageHandler.h
+ * @file XMLMessageHandler.h
  * @brief Handle XML error with a custom format
  * @author Diego Ferigo
  * @date 06/04/2017
@@ -18,9 +18,9 @@
 #include <QtXmlPatterns>
 #include <iostream>
 
-class xmlMessageHandler : public QAbstractMessageHandler {
+class XMLMessageHandler : public QAbstractMessageHandler {
 public:
-    xmlMessageHandler() : QAbstractMessageHandler(0) {}
+    XMLMessageHandler() : QAbstractMessageHandler(0) {}
     QString statusMessage() const { return m_description; }
     int line() const { return m_sourceLocation.line(); }
     int column() const { return m_sourceLocation.column(); }

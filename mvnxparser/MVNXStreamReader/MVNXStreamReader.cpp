@@ -6,19 +6,24 @@
  */
 
 /**
- * @file mvnxStreamReader.cpp
+ * @file MVNXStreamReader.cpp
  * @brief Validate and parse efficiently mvnx files
  * @author Diego Ferigo
  * @date 18/04/2017
  */
 
-#include "mvnxStreamReader.h"
+#include "MVNXStreamReader.h"
 
 using namespace std;
 using namespace xmlstream;
 using namespace xmlstream::mvnx;
 
-void mvnxStreamReader::printParsedDocument()
+XMLContentPtrS MVNXStreamReader::getXmlTreeRoot() const
+{
+    return std::dynamic_pointer_cast<XMLContent>(XMLTreeRoot);
+}
+
+void MVNXStreamReader::printParsedDocument()
 {
     // Initialize the XML file
     QXmlStreamReader xml;
@@ -29,7 +34,7 @@ void mvnxStreamReader::printParsedDocument()
     // element
     QXmlStreamReader::TokenType tokenType;
     string tokenString;
-    string elementName;
+    string ElementName;
     // string elementNS; // TODO: Namespace support
     string elementText;
     QXmlStreamAttributes elementAttributes;
@@ -39,15 +44,15 @@ void mvnxStreamReader::printParsedDocument()
 
         tokenType          = xml.tokenType();
         tokenString        = xml.tokenString().toStdString();
-        string elementName = xml.name().toString().toStdString();
+        string ElementName = xml.name().toString().toStdString();
         // string ElementNS   = xml.namespaceUri().toString().toStdString();
         string elementText = xml.text().toString().toStdString();
         elementAttributes  = xml.attributes();
 
         if (not xml.isCharacters()) {
-            cout << tokenString << ": " << elementName << endl;
+            cout << tokenString << ": " << ElementName << endl;
             if (not elementAttributes.empty()) {
-                for (auto element : elementAttributes)
+                for (const auto& element : elementAttributes)
                     cout << "   " << element.name().toString().toStdString()
                          << "=\"" << element.value().toString().toStdString()
                          << "\"" << endl;
@@ -66,7 +71,7 @@ void mvnxStreamReader::printParsedDocument()
     }
 }
 
-bool mvnxStreamReader::parse()
+bool MVNXStreamReader::parse()
 {
     // Initialize the XML file
     QXmlStreamReader xml;
@@ -77,7 +82,7 @@ bool mvnxStreamReader::parse()
     // element
     QXmlStreamReader::TokenType tokenType;
     string tokenString;
-    string elementName;
+    string ElementName;
     // string elementNS; // TODO: Namespace support
     string elementText;
     QXmlStreamAttributes elementAttributes;
@@ -89,7 +94,7 @@ bool mvnxStreamReader::parse()
         // Get the metadata of the element
         tokenType   = xml.tokenType();
         tokenString = xml.tokenString().toStdString();
-        elementName = xml.name().toString().toStdString();
+        ElementName = xml.name().toString().toStdString();
         // elementNS   = xml.namespaceUri().toString().toStdString();
         elementText       = xml.text().toString().toStdString();
         elementAttributes = xml.attributes();
@@ -99,7 +104,7 @@ bool mvnxStreamReader::parse()
             case QXmlStreamReader::StartDocument:
                 break;
             case QXmlStreamReader::StartElement:
-                handleStartElement(elementName, elementAttributes);
+                handleStartElement(ElementName, elementAttributes);
                 break;
             case QXmlStreamReader::Characters:
                 handleCharacters(elementText);
@@ -108,10 +113,10 @@ bool mvnxStreamReader::parse()
                 handleComment(elementText);
                 break;
             case QXmlStreamReader::EndElement:
-                handleStopElement(elementName);
+                handleStopElement(ElementName);
                 break;
             case QXmlStreamReader::EndDocument:
-                xmlTreeRoot = elementsLIFO.front();
+                XMLTreeRoot = elementsLIFO.front();
                 elementsLIFO.pop_back();
                 assert(elementsLIFO.empty());
                 break;
@@ -123,11 +128,11 @@ bool mvnxStreamReader::parse()
 }
 
 attributes_t
-mvnxStreamReader::processAttributes(QXmlStreamAttributes elementAttributes)
+MVNXStreamReader::processAttributes(QXmlStreamAttributes elementAttributes)
 {
     attributes_t attributes;
     if (not elementAttributes.empty()) {
-        for (auto element : elementAttributes) {
+        for (const auto& element : elementAttributes) {
             assert(element.name().toString().toStdString().length() != 0);
             assert(element.value().toString().toStdString().length() != 0);
             // Process the attribute
@@ -138,7 +143,7 @@ mvnxStreamReader::processAttributes(QXmlStreamAttributes elementAttributes)
     return attributes;
 }
 
-bool mvnxStreamReader::elementIsEnabled(string elementName)
+bool MVNXStreamReader::elementIsEnabled(string ElementName)
 {
     // If the user didn't provide any configuration, all elements are enabled
     if (conf.empty()) {
@@ -146,7 +151,7 @@ bool mvnxStreamReader::elementIsEnabled(string elementName)
     }
     else {
         try {
-            if (conf[elementName] == true)
+            if (conf[ElementName] == true)
                 return true;
         } catch (const std::out_of_range& e) {
             return false;
@@ -155,39 +160,39 @@ bool mvnxStreamReader::elementIsEnabled(string elementName)
     }
 }
 
-void mvnxStreamReader::handleStartElement(
-          string elementName, QXmlStreamAttributes elementAttributes)
+void MVNXStreamReader::handleStartElement(
+          string ElementName, QXmlStreamAttributes elementAttributes)
 {
-    if (elementIsEnabled(elementName)) {
+    if (elementIsEnabled(ElementName)) {
         // Create a new object and handle it with smart pointers
-        IContentPtrS element = make_shared<xmlContent>(
-                  elementName, processAttributes(elementAttributes));
+        IContentPtrS element = make_shared<XMLContent>(
+                  ElementName, processAttributes(elementAttributes));
         // Push it in the buffer of pointers
         elementsLIFO.push_back(element);
     }
 }
 
-void mvnxStreamReader::handleCharacters(string elementText)
+void MVNXStreamReader::handleCharacters(string elementText)
 {
     IContentPtrS lastElement = elementsLIFO.back();
-    assert(lastElement != nullptr);
+    assert(lastElement);
     lastElement->setText(elementText);
 }
 
-void mvnxStreamReader::handleComment(string elementText)
+void MVNXStreamReader::handleComment(string elementText)
 {
     // TODO: this is not a mvnx <comment> but a XML comment
 }
 
-void mvnxStreamReader::handleStopElement(string elementName)
+void MVNXStreamReader::handleStopElement(string ElementName)
 {
-    if (elementIsEnabled(elementName)) {
+    if (elementIsEnabled(ElementName)) {
         if (elementsLIFO.size() > 1) {
             // Extract parent and child elements
             IContentPtrS lastElement         = elementsLIFO.back();
             IContentPtrS secondToLastElement = elementsLIFO.end()[-2];
             assert(lastElement && secondToLastElement); // Are not nullptr
-            assert(lastElement->getElementName() == elementName);
+            assert(lastElement->getElementName() == ElementName);
 
             // Assign the child the parent element
             secondToLastElement->setChild(lastElement);
@@ -198,20 +203,20 @@ void mvnxStreamReader::handleStopElement(string elementName)
     }
 }
 
-vector<xmlContentPtrS> mvnxStreamReader::findElement(string elementName)
+vector<XMLContentPtrS> MVNXStreamReader::findElement(string ElementName)
 {
-    vector<xmlContentPtrS> childElementsCast;
-    assert(xmlTreeRoot); // Not nullptr
-    if (xmlTreeRoot) {
+    vector<XMLContentPtrS> childElementsCast;
+    assert(XMLTreeRoot); // Not nullptr
+    if (XMLTreeRoot) {
         vector<IContentPtrS> childElements
-                  = xmlTreeRoot->findChildElements(elementName);
+                  = XMLTreeRoot->findChildElements(ElementName);
         childElementsCast.resize(childElements.size());
-        // Cast to xmlContent the vector's item using a lambda expression
+        // Cast to XMLContent the vector's item using a lambda expression
         transform(childElements.begin(),
                   childElements.end(),
                   childElementsCast.begin(),
                   [](IContentPtrS e) {
-                      return dynamic_pointer_cast<xmlContent>(e);
+                      return dynamic_pointer_cast<XMLContent>(e);
                   });
     }
     return childElementsCast;

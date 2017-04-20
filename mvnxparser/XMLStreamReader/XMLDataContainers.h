@@ -6,7 +6,7 @@
  */
 
 /**
- * @file xmlDataContainers.cpp
+ * @file XMLDataContainers.cpp
  * @brief Base classes for handling TEXT and CONTENT xml elements
  * @author Diego Ferigo
  * @date 18/04/2017
@@ -33,8 +33,8 @@ enum content_t
 };
 
 //
-// Pure abstract class from which `xmlContent` classes will derive.
-// `xmlContent` could have a TEXT or ELEMENT content type.
+// Pure abstract class from which `XMLContent` classes will derive.
+// `XMLContent` could have a TEXT or ELEMENT content type.
 //
 // TEXT objects have a string content and xml attributes.
 // ELEMENT objects have children (vector<IContent*>) and xml attributes.
@@ -42,44 +42,46 @@ enum content_t
 // IContent will provide the base polymorphic type to handle both classes.
 //
 class IContent;
-class xmlContent;
+class XMLContent;
 
 // Aliases for pointers to XML elements
 // Useful expecially for the client side
 typedef std::shared_ptr<IContent> IContentPtrS;
-typedef std::shared_ptr<xmlContent> xmlContentPtrS;
+typedef std::shared_ptr<XMLContent> XMLContentPtrS;
 template <typename T>
 using vector_ptr = std::shared_ptr<std::vector<T>>;
 typedef vector_ptr<IContentPtrS> IContentVecPtrS;
-typedef vector_ptr<xmlContentPtrS> xmlContentVecPtrS;
+typedef vector_ptr<XMLContentPtrS> XMLContentVecPtrS;
 
 // Some useful typedefs for readability
 // Used internally
 typedef IContent child_t;
 typedef std::shared_ptr<child_t> child_ptr;
 //
-typedef std::string elementName;
-typedef std::string attributeName;
-typedef std::string attributeValue;
+typedef std::string ElementName;
+typedef std::string AttributeName;
+typedef std::string AttributeValue;
 //
-typedef std::unordered_map<elementName, vector_ptr<child_ptr>> children_t;
+typedef std::unordered_map<ElementName, vector_ptr<child_ptr>> children_t;
 typedef std::shared_ptr<children_t> children_ptr;
-typedef std::unordered_map<attributeName, attributeValue> attributes_t;
+typedef std::unordered_map<AttributeName, AttributeValue> attributes_t;
 
 // This is an abstract class that offers an interface for polymorphic usage
 class IContent {
 protected:
     std::string text;
     children_ptr children;
-    elementName element;
+    ElementName element;
     content_t content_type;
     attributes_t attributes;
 
 public:
     // Constructor(s)
-    IContent(elementName _element = "noname") : element(_element){};
-    IContent(elementName _element, attributes_t _attributes)
-        : element(_element), attributes(_attributes){};
+    IContent(ElementName _element = "noname") : element(_element) {}
+    IContent(ElementName _element, attributes_t _attributes)
+        : element(_element), attributes(_attributes)
+    {
+    }
 
     // Destructor
     virtual ~IContent() = default;
@@ -87,11 +89,11 @@ public:
     // Get method(s)
     virtual std::string getText() const                                 = 0;
     virtual content_t getContentType() const                            = 0;
-    virtual elementName getElementName() const                          = 0;
+    virtual ElementName getElementName() const                          = 0;
     virtual attributes_t getAttributes() const                          = 0;
-    virtual attributeValue getAttribute(attributeName _attribute)       = 0;
+    virtual AttributeValue getAttribute(AttributeName _attribute)       = 0;
     virtual children_ptr getChildElements()                             = 0;
-    virtual vector_ptr<child_ptr> getChildElement(elementName _element) = 0;
+    virtual vector_ptr<child_ptr> getChildElement(ElementName _element) = 0;
 
     // Set method(s)
     virtual void setText(std::string _text)              = 0;
@@ -99,27 +101,27 @@ public:
     virtual void setAttributes(attributes_t _attributes) = 0;
 
     // Other methods
-    virtual std::vector<child_ptr> findChildElements(elementName _element) = 0;
+    virtual std::vector<child_ptr> findChildElements(ElementName _element) = 0;
 };
 
 // This class handles both ELEMENT and TEXT xml content.
-class xmlContent : public IContent {
+class XMLContent : public IContent {
 public:
     // Constructor(s)
-    xmlContent() = default;
-    xmlContent(elementName _element) : IContent(_element){};
-    xmlContent(elementName _element, attributes_t _attributes)
+    XMLContent() = default;
+    XMLContent(ElementName _element) : IContent(_element) {}
+    XMLContent(ElementName _element, attributes_t _attributes)
         : IContent(_element, _attributes){};
 
     // Destructor
-    virtual ~xmlContent() = default;
+    virtual ~XMLContent() = default;
 
     // Get method(s)
-    virtual std::string getText() const { return text; };
-    virtual content_t getContentType() const { return content_type; };
-    virtual elementName getElementName() const { return element; };
+    virtual std::string getText() const { return text; }
+    virtual content_t getContentType() const { return content_type; }
+    virtual ElementName getElementName() const { return element; }
     virtual attributes_t getAttributes() const { return attributes; }
-    virtual attributeValue getAttribute(attributeName _attribute)
+    virtual AttributeValue getAttribute(AttributeName _attribute)
     {
         if (attributes.find(_attribute) != attributes.end()) {
             return attributes[_attribute];
@@ -127,9 +129,9 @@ public:
         else {
             return std::string();
         }
-    };
+    }
     virtual children_ptr getChildElements() { return children; }
-    virtual vector_ptr<child_ptr> getChildElement(elementName _element)
+    virtual vector_ptr<child_ptr> getChildElement(ElementName _element)
     {
         if (children->find(_element) != children->end()) {
             return children->at(_element);
@@ -140,7 +142,7 @@ public:
                        // program will segfault.
             return nullptr;
         }
-    };
+    }
 
     // Set method(s)
     virtual void setText(std::string _text)
@@ -150,7 +152,7 @@ public:
 
         // Set the text
         text = _text;
-    };
+    }
     virtual void setChild(child_ptr _childContent)
     {
         // If setChild() is called, it means that this element has a ELEMENT
@@ -174,23 +176,23 @@ public:
 
         // Add the new children to the vector of the children of the same type
         children->at(_childContent->getElementName())->push_back(_childContent);
-    };
+    }
     virtual void setAttributes(attributes_t _attributes)
     {
         attributes = _attributes;
-    };
+    }
 
     // Other methods
-    virtual std::vector<child_ptr> findChildElements(elementName _element)
+    virtual std::vector<child_ptr> findChildElements(ElementName _element)
     {
         std::vector<child_ptr> foundElements;
         std::vector<child_ptr> foundElementsInChild;
 
         // For every branch
         if (children) { // Not a nullptr
-            for (auto child_element_map : *children) {
+            for (const auto& child_element_map : *children) {
                 // Reach its last leaf recursively
-                for (auto child_element : *(child_element_map.second)) {
+                for (const auto& child_element : *(child_element_map.second)) {
                     // Get the matches from the children
                     foundElementsInChild
                               = child_element->findChildElements(_element);
@@ -202,12 +204,12 @@ public:
                     // element
                     if (child_element->getElementName() == _element) {
                         foundElements.push_back(child_element);
-                    };
+                    }
                 }
             }
         }
         return foundElements;
-    };
+    }
 };
 
 } // namespace xmlstream

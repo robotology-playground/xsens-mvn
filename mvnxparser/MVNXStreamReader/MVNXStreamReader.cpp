@@ -164,9 +164,14 @@ void MVNXStreamReader::handleStartElement(
           string ElementName, QXmlStreamAttributes elementAttributes)
 {
     if (elementIsEnabled(ElementName)) {
+        // Get a weak pointer to the parent
+        parent_ptr parent;
+        if (!elementsLIFO.empty())
+            parent = elementsLIFO.back();
+
         // Create a new object and handle it with smart pointers
         IContentPtrS element = make_shared<XMLContent>(
-                  ElementName, processAttributes(elementAttributes));
+                  ElementName, processAttributes(elementAttributes), parent);
         // Push it in the buffer of pointers
         elementsLIFO.push_back(element);
     }

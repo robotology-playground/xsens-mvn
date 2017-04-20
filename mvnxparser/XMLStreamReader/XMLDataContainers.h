@@ -57,6 +57,8 @@ typedef vector_ptr<XMLContentPtrS> XMLContentVecPtrS;
 // Used internally
 typedef IContent child_t;
 typedef std::shared_ptr<child_t> child_ptr;
+typedef std::shared_ptr<child_t> parent_ptr;
+typedef std::weak_ptr<child_t> parent_wptr;
 //
 typedef std::string ElementName;
 typedef std::string AttributeName;
@@ -70,6 +72,7 @@ typedef std::unordered_map<AttributeName, AttributeValue> attributes_t;
 class IContent {
 protected:
     std::string text;
+    parent_wptr parent;
     children_ptr children;
     ElementName element;
     content_t content_type;
@@ -78,8 +81,8 @@ protected:
 public:
     // Constructor(s)
     IContent(ElementName _element = "noname") : element(_element) {}
-    IContent(ElementName _element, attributes_t _attributes)
-        : element(_element), attributes(_attributes)
+    IContent(ElementName _element, attributes_t _attributes, parent_ptr _parent)
+        : parent(_parent), element(_element), attributes(_attributes)
     {
     }
 
@@ -91,6 +94,7 @@ public:
     virtual content_t getContentType() const                            = 0;
     virtual ElementName getElementName() const                          = 0;
     virtual attributes_t getAttributes() const                          = 0;
+    virtual parent_ptr getParent() const                                = 0;
     virtual AttributeValue getAttribute(AttributeName _attribute)       = 0;
     virtual children_ptr getChildElements()                             = 0;
     virtual vector_ptr<child_ptr> getChildElement(ElementName _element) = 0;
@@ -98,6 +102,7 @@ public:
     // Set method(s)
     virtual void setText(std::string _text)              = 0;
     virtual void setChild(child_ptr _childContent)       = 0;
+    virtual void setParent(parent_ptr _parent)           = 0;
     virtual void setAttributes(attributes_t _attributes) = 0;
 
     // Other methods
@@ -110,8 +115,10 @@ public:
     // Constructor(s)
     XMLContent() = default;
     XMLContent(ElementName _element) : IContent(_element) {}
-    XMLContent(ElementName _element, attributes_t _attributes)
-        : IContent(_element, _attributes){};
+    XMLContent(ElementName _element,
+               attributes_t _attributes,
+               parent_ptr _parent)
+        : IContent(_element, _attributes, _parent){};
 
     // Destructor
     virtual ~XMLContent() = default;
@@ -121,6 +128,7 @@ public:
     virtual content_t getContentType() const { return content_type; }
     virtual ElementName getElementName() const { return element; }
     virtual attributes_t getAttributes() const { return attributes; }
+    virtual parent_ptr getParent() const { return parent.lock(); }
     virtual AttributeValue getAttribute(AttributeName _attribute)
     {
         if (attributes.find(_attribute) != attributes.end()) {
@@ -155,6 +163,9 @@ public:
     }
     virtual void setChild(child_ptr _childContent)
     {
+        // Not a nullptr
+        assert(_childContent);
+
         // If setChild() is called, it means that this element has a ELEMENT
         // content
         content_type = ELEMENT;
@@ -177,6 +188,7 @@ public:
         // Add the new children to the vector of the children of the same type
         children->at(_childContent->getElementName())->push_back(_childContent);
     }
+    virtual void setParent(parent_ptr _parent) { parent = _parent; }
     virtual void setAttributes(attributes_t _attributes)
     {
         attributes = _attributes;

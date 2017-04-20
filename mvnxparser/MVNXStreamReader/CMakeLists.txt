@@ -14,3 +14,8 @@ qt5_use_modules(MVNXStreamReader Xml)
 
 # Export the includes needed to who inherits this library
 target_include_directories(MVNXStreamReader INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+
+# Build the test executable
+add_executable(MVNXStreamReaderDriver
+               ${CMAKE_CURRENT_SOURCE_DIR}/Test/MVNXStreamReaderDriver.cpp)
+target_link_libraries(MVNXStreamReaderDriver MVNXStreamReader)

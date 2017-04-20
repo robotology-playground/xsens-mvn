@@ -27,3 +27,8 @@ target_include_directories(XMLStreamReader INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}
 
 # Use QT Modules
 qt5_use_modules(XMLStreamReader Xml XmlPatterns)
+
+# Build the test executable
+add_executable(XMLStreamReaderDriver
+               ${CMAKE_CURRENT_SOURCE_DIR}/Test/XMLStreamReaderDriver.cpp)
+target_link_libraries(XMLStreamReaderDriver XMLStreamReader)

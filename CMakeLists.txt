@@ -26,7 +26,7 @@ include(YarpPlugin)
 include(YarpInstallationHelpers)
 set(YARP_FORCE_DYNAMIC_PLUGINS TRUE)
 # I want to install plugins in PREFIX/yarp.
-#yarp_configure_external_installation(xsens-mvn-driver WITH_PLUGINS)
+yarp_configure_plugins_installation(xsens)
 
 # Compile the plugins by default
 set(COMPILE_BY_DEFAULT ON)

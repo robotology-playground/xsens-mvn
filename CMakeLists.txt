@@ -43,3 +43,8 @@ add_subdirectory(xsenswrapper)
 add_subdirectory(xsensremote)
 add_subdirectory(xsensremotelight)
 add_subdirectory(mvnxparser)
+
+
+#### add the "uninstall" target
+include(AddUninstallTarget)
+

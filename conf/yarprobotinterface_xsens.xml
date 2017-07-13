@@ -4,6 +4,7 @@
     <device type="xsens_mvn" name="XsensSuit">
         <param name="license-dir">"C:\\Program Files\\Xsens\\MVN SDK 4.2\\SDK Files\\rundeps"</param>
         <param name="suit-config">Human/FullBody</param>
+        <param name="scanTimeout">60.0</param>
         <group name="body-dimensions">
             <param name="ankleHeight">0.07</param>
             <param name="armSpan">1.71</param>

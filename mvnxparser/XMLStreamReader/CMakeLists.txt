@@ -12,8 +12,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 # Load dependencies
-find_package(Qt5Xml REQUIRED)
-find_package(Qt5XmlPatterns REQUIRED)
+find_package(Qt5 COMPONENTS Xml XmlPatterns REQUIRED)
 
 # Build the libraries
 # ===================

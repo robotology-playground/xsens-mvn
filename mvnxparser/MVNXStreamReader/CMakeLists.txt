@@ -5,7 +5,7 @@
 project(MVNXStreamReader VERSION 0.1.0)
 
 # Load dependencies
-find_package(Qt5Xml REQUIRED)
+find_package(Qt5 COMPONENTS Xml REQUIRED)
 
 # Build the library
 # =================

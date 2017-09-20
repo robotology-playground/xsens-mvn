@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 2016 iCub Facility
-* Authors: Francesco Romano
+* Copyright (C) 2016-2017 iCub Facility
+* Authors: Francesco Romano, Luca Tagliapietra
 * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
 */
 
@@ -190,6 +190,11 @@ bool yarp::dev::XsensMVN::XsensMVNPrivate::init(yarp::os::Searchable &config)
     resizeVectorToOuterAndInnerSize(m_lastSegmentVelocitiesRead, m_connection->segmentCount(), 6);
     resizeVectorToOuterAndInnerSize(m_lastSegmentAccelerationRead, m_connection->segmentCount(), 6);
 
+    resizeVectorToOuterAndInnerSize(m_lastSensorVelocitiesRead, m_connection->sensorCount(), 3);
+    resizeVectorToOuterAndInnerSize(m_lastSensorAccelerationsRead, m_connection->sensorCount(), 3);
+    resizeVectorToOuterAndInnerSize(m_lastSensorMagneticFieldsRead, m_connection->sensorCount(), 3);
+    resizeVectorToOuterAndInnerSize(m_lastSensorOrientationsRead, m_connection->sensorCount(), 4);
+
     yInfo("--- Body model Segments ---");
     std::vector<yarp::experimental::dev::FrameReference> segments = segmentNames();
     //Segment ID is 1-based, segment Index = segmentID - 1 (i.e. 0-based)
@@ -307,6 +312,12 @@ std::vector<yarp::experimental::dev::FrameReference> yarp::dev::XsensMVN::XsensM
     return segments;
 }
 
+std::vector<yarp::experimental::dev::IMUFrameReference> yarp::dev::XsensMVN::XsensMVNPrivate::sensorIDs() const
+{
+    // TODO: dummy, to be implemented
+     return std::vector<yarp::experimental::dev::IMUFrameReference>(m_connection->sensorCount());
+}
+
 bool yarp::dev::XsensMVN::XsensMVNPrivate::startAcquisition()
 {
     std::lock_guard<std::recursive_mutex> globalGuard(m_objectMutex);
@@ -419,7 +430,8 @@ void yarp::dev::XsensMVN::XsensMVNPrivate::processNewFrame()
             //Unique lock for all data?
             std::lock_guard<std::mutex> readLock(m_dataMutex);
 
-            if (m_lastSegmentPosesRead.size() != lastFrame.pose.m_segmentStates.size()) {
+            if (m_lastSegmentPosesRead.size() != lastFrame.pose.m_segmentStates.size() ||
+                m_lastSensorOrientationsRead.size() != lastFrame.sensorsData.size()) {
                 m_driverStatus = yarp::experimental::dev::IFrameProviderStatusError;
                 continue; //error
             }
@@ -429,16 +441,15 @@ void yarp::dev::XsensMVN::XsensMVNPrivate::processNewFrame()
             int64_t unixTime = lastFrame.pose.m_absoluteTime;
             double time = unixTime / 1000.0;
             //double time = yarp::os::Time::now();// / 1000.0;
-            m_lastSegmentTimestamp = yarp::os::Stamp(lastFrame.pose.m_frameNumber, time);
+            m_lastTimestamp = yarp::os::Stamp(lastFrame.pose.m_frameNumber, time);
 
-			//yInfo("Frame received at %lf - YARP Time %lf", time, yarp::os::Time::now());
+            //yInfo("Frame received at %lf - YARP Time %lf", time, yarp::os::Time::now());
             
             for (unsigned index = 0; index < lastFrame.pose.m_segmentStates.size(); ++index) {
                 const XmeSegmentState &segmentData = lastFrame.pose.m_segmentStates[index];
                 yarp::sig::Vector &segmentPosition = m_lastSegmentPosesRead[index];
                 yarp::sig::Vector &segmentVelocity = m_lastSegmentVelocitiesRead[index];
                 yarp::sig::Vector &segmentAcceleration = m_lastSegmentAccelerationRead[index];
-
 
                 for (unsigned i = 0; i < 3; ++i) {
                     //linear part
@@ -455,52 +466,43 @@ void yarp::dev::XsensMVN::XsensMVNPrivate::processNewFrame()
                 segmentPosition(5) = segmentData.m_orientation.y();
                 segmentPosition(6) = segmentData.m_orientation.z();
             }
+
+            for (unsigned index = 0; index < lastFrame.sensorsData.size(); ++index) {
+                const XmeSensorSample &sensorData = lastFrame.sensorsData[index];
+                yarp::sig::Vector &sensorOrientation = m_lastSensorOrientationsRead[index];
+                yarp::sig::Vector &sensorVelocity = m_lastSensorVelocitiesRead[index];
+                yarp::sig::Vector &sensorAcceleration = m_lastSensorAccelerationsRead[index];
+                yarp::sig::Vector &sensorMagneticField = m_lastSensorMagneticFieldsRead[index];
+
+                for (unsigned i = 0; i < 3; ++i) {
+                    sensorVelocity(i) = sensorData.m_gyr[i];
+                    sensorAcceleration(i) = sensorData.m_acc[i];
+                    sensorMagneticField(i) = sensorData.m_mag[i];
+                }
+                sensorOrientation(0) = sensorData.m_q.w();
+                sensorOrientation(1) = sensorData.m_q.x();
+                sensorOrientation(2) = sensorData.m_q.y();
+                sensorOrientation(3) = sensorData.m_q.z();
+            }
+
             m_driverStatus = yarp::experimental::dev::IFrameProviderStatusOK;
         }
     }
     yDebug("Exiting thread");
-    //newFrame.sensorsData.reserve(lastFrame.sensorsData.size());
-    //for (auto segmentData : lastFrame.sensorsData) {
-    //    xsens::XsensSensorData sensor;
-    //    
-    //    segment.position.c1 = segmentData.m_position[0];
-    //    segment.position.c2 = segmentData.m_position[1];
-    //    segment.position.c3 = segmentData.m_position[2];
-
-    //    segment.velocity.c1 = segmentData.m_velocity[0];
-    //    segment.velocity.c2 = segmentData.m_velocity[1];
-    //    segment.velocity.c3 = segmentData.m_velocity[2];
-
-    //    segment.acceleration.c1 = segmentData.m_acceleration[0];
-    //    segment.acceleration.c2 = segmentData.m_acceleration[1];
-    //    segment.acceleration.c3 = segmentData.m_acceleration[2];
-
-    //    //angular information
-    //    segment.orientation.c1 = segmentData.m_orientation[0];
-    //    segment.orientation.c2 = segmentData.m_orientation[1];
-    //    segment.orientation.c3 = segmentData.m_orientation[2];
-    //    segment.orientation.c4 = segmentData.m_orientation[3];
-
-    //    segment.angularVelocity.c1 = segmentData.m_angularVelocity[0];
-    //    segment.angularVelocity.c2 = segmentData.m_angularVelocity[1];
-    //    segment.angularVelocity.c3 = segmentData.m_angularVelocity[2];
-
-    //    segment.angularAcceleration.c1 = segmentData.m_angularAcceleration[0];
-    //    segment.angularAcceleration.c2 = segmentData.m_angularAcceleration[1];
-    //    segment.angularAcceleration.c3 = segmentData.m_angularAcceleration[2];
-
-    //    newFrame.segments.push_back(segment);
-
-    //}
-
-
 }
 
 yarp::experimental::dev::IFrameProviderStatus yarp::dev::XsensMVN::XsensMVNPrivate::getLastSegmentReadTimestamp(yarp::os::Stamp& timestamp)
 {
     std::lock_guard<std::mutex> readLock(m_dataMutex);
-    timestamp = m_lastSegmentTimestamp;
+    timestamp = m_lastTimestamp;
     return m_driverStatus;
+}
+
+yarp::experimental::dev::IIMUFrameProviderStatus yarp::dev::XsensMVN::XsensMVNPrivate::getLastSensorReadTimestamp(yarp::os::Stamp& timestamp)
+{
+    std::lock_guard<std::mutex> readLock(m_dataMutex);
+    timestamp = m_lastTimestamp;
+    return yarp::experimental::dev::IIMUFrameProviderStatus(static_cast<int>(m_driverStatus));
 }
 
 yarp::experimental::dev::IFrameProviderStatus yarp::dev::XsensMVN::XsensMVNPrivate::getLastSegmentInformation(yarp::os::Stamp& timestamp,
@@ -528,16 +530,16 @@ yarp::experimental::dev::IFrameProviderStatus yarp::dev::XsensMVN::XsensMVNPriva
         if (m_acquiring) {
             //we should receive data
             double now = yarp::os::Time::now();
-            if ((now - m_lastSegmentTimestamp.getTime()) > 1.0) {
+            if ((now - m_lastTimestamp.getTime()) > 1.0) {
                 m_driverStatus = yarp::experimental::dev::IFrameProviderStatusTimeout;
             }
-			//yInfo("Reading data with time %lf at YARP Time %lf", m_lastSegmentTimestamp.getTime(), now);
+            //yInfo("Reading data with time %lf at YARP Time %lf", m_lastSegmentTimestamp.getTime(), now);
             /*else {
                 m_driverStatus = yarp::experimental::dev::IFrameProviderStatusOK;
             }*/
         }
         //get anyway data out
-        timestamp = m_lastSegmentTimestamp;
+        timestamp = m_lastTimestamp;
         for (unsigned i = 0; i < m_lastSegmentPosesRead.size(); ++i) {
             lastPoses[i] = m_lastSegmentPosesRead[i];
             lastVelocities[i] = m_lastSegmentVelocitiesRead[i];
@@ -546,6 +548,56 @@ yarp::experimental::dev::IFrameProviderStatus yarp::dev::XsensMVN::XsensMVNPriva
     }
 
    return m_driverStatus;
+}
+
+yarp::experimental::dev::IIMUFrameProviderStatus yarp::dev::XsensMVN::XsensMVNPrivate::getLastSensorInformation(yarp::os::Stamp& timestamp,
+    std::vector<yarp::sig::Vector>& lastOrientations,
+    std::vector<yarp::sig::Vector>& lastVelocities,
+    std::vector<yarp::sig::Vector>& lastAccelerations,
+    std::vector<yarp::sig::Vector>& lastMagneticFields)
+{
+    //These also ensure all the sizes are the same
+    if (lastOrientations.size() < m_lastSensorOrientationsRead.size()) {
+        //This will cause an allocation
+        resizeVectorToOuterAndInnerSize(lastOrientations, m_lastSensorOrientationsRead.size(), 4);
+    }
+    if (lastVelocities.size() < m_lastSensorVelocitiesRead.size()) {
+        //This will cause an allocation
+        resizeVectorToOuterAndInnerSize(lastVelocities, m_lastSensorVelocitiesRead.size(), 3);
+    }
+    if (lastAccelerations.size() < m_lastSensorAccelerationsRead.size()) {
+        //This will cause an allocation
+        resizeVectorToOuterAndInnerSize(lastAccelerations, m_lastSensorAccelerationsRead.size(), 3);
+    }
+    if (lastMagneticFields.size() < m_lastSensorMagneticFieldsRead.size()) {
+        //This will cause an allocation
+        resizeVectorToOuterAndInnerSize(lastMagneticFields, m_lastSensorMagneticFieldsRead.size(), 3);
+    }
+
+    {
+        std::lock_guard<std::mutex> readLock(m_dataMutex);
+
+        if (m_acquiring) {
+            //we should receive data
+            double now = yarp::os::Time::now();
+            if ((now - m_lastTimestamp.getTime()) > 1.0) {
+                m_driverStatus = yarp::experimental::dev::IFrameProviderStatusTimeout;
+            }
+            //yInfo("Reading data with time %lf at YARP Time %lf", m_lastSegmentTimestamp.getTime(), now);
+            /*else {
+            m_driverStatus = yarp::experimental::dev::IFrameProviderStatusOK;
+            }*/
+        }
+        //get anyway data out
+        timestamp = m_lastTimestamp;
+        for (unsigned i = 0; i < m_lastSensorOrientationsRead.size(); ++i) {
+            lastOrientations[i] = m_lastSensorOrientationsRead[i];
+            lastVelocities[i] = m_lastSensorVelocitiesRead[i];
+            lastAccelerations[i] = m_lastSensorAccelerationsRead[i];
+            lastMagneticFields[i] = m_lastSensorMagneticFieldsRead[i];
+        }
+    }
+    return yarp::experimental::dev::IIMUFrameProviderStatus(static_cast<int>(m_driverStatus));
 }
 
 // Callback functions

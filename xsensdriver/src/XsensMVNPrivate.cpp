@@ -447,7 +447,7 @@ void yarp::dev::XsensMVN::XsensMVNPrivate::processNewFrame()
                     segmentAcceleration(i) = segmentData.m_acceleration[i];
                     //angular part for velocity and acceleration
                     segmentVelocity(3 + i) = segmentData.m_angularVelocity[i];
-                    segmentAcceleration(i) = segmentData.m_angularAcceleration[i];
+                    segmentAcceleration(3 + i) = segmentData.m_angularAcceleration[i];
                 }
                 // Do the quaternion explicitly to avoid issues in format
                 segmentPosition(3) = segmentData.m_orientation.w();

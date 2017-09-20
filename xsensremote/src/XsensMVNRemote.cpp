@@ -206,7 +206,7 @@ namespace yarp {
         std::vector<yarp::experimental::dev::FrameReference> XsensMVNRemote::frames()
         {
             assert(m_pimpl);
-            std::vector<xsens::FrameReferece> frames = m_pimpl->m_xsensService.segments();
+            std::vector<xsens::FrameReferece> frames = m_pimpl->m_xsensService.segments_order();
             std::vector<yarp::experimental::dev::FrameReference> deserializedFrames;
             deserializedFrames.reserve(frames.size());
             std::for_each(frames.begin(), frames.end(), [&](xsens::FrameReferece& frame) {

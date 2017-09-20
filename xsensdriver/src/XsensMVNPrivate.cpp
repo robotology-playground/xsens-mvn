@@ -314,8 +314,24 @@ std::vector<yarp::experimental::dev::FrameReference> yarp::dev::XsensMVN::XsensM
 
 std::vector<yarp::experimental::dev::IMUFrameReference> yarp::dev::XsensMVN::XsensMVNPrivate::sensorIDs() const
 {
-    // TODO: dummy, to be implemented
-     return std::vector<yarp::experimental::dev::IMUFrameReference>(m_connection->sensorCount());
+    std::lock_guard<std::recursive_mutex> globalGuard(m_objectMutex);
+    if (!m_connection || m_connection->sensorCount() < 0) return std::vector<yarp::experimental::dev::IMUFrameReference>();
+
+    std::vector<yarp::experimental::dev::IMUFrameReference> sensors;
+    sensors.reserve(m_connection->sensorCount());
+
+    XmeDeviceStatusArray sensors_status = m_connection->status().suitStatus().m_sensors;
+
+    for (unsigned i = 0; i < static_cast<unsigned>(sensors_status.size()); ++i){
+        XmeSegmentId segmentID = static_cast<XmeSegmentId>(m_connection->segmentIdFromLocation(sensors_status[i].m_locationId));
+        XsString segmentName;
+        XmeSegmentId_toString(segmentID, &segmentName);
+        // TODO: first field (imu reference frame name) should be the sensor frame name, right now leaving empty
+        // second field (IMU frame name) should be the sensor frame name, using the name of the link associated to the sensor
+        yarp::experimental::dev::IMUFrameReference frameInfo = { "", segmentName.toStdString() };
+        sensors.push_back(frameInfo);
+    }
+     return sensors;
 }
 
 bool yarp::dev::XsensMVN::XsensMVNPrivate::startAcquisition()

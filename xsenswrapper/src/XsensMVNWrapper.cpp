@@ -203,7 +203,7 @@ namespace yarp {
                 //if (result) suspend();
             }
 
-            virtual std::vector<xsens::FrameReferece> segments()
+            virtual std::vector<xsens::FrameReferece> segments_order()
             {
                 if (!m_frameProvider) return std::vector<xsens::FrameReferece>();
                 //convert from underlining yarp::dev object into thrift object
@@ -214,6 +214,22 @@ namespace yarp {
                     xsens::FrameReferece reference;
                     reference.frameName = frame.frameName;
                     reference.frameReference = frame.frameReference;
+                    serializableObject.push_back(reference);
+                });
+                return serializableObject;
+            }
+
+            virtual std::vector<xsens::FrameReferece> imu_segments_order()
+            {
+                if (!m_frameProvider) return std::vector<xsens::FrameReferece>();
+                //convert from underlining yarp::dev object into thrift object
+                std::vector<yarp::experimental::dev::IMUFrameReference> frames = m_imuFrameProvider->IMUFrames();
+                std::vector<xsens::FrameReferece> serializableObject;
+                serializableObject.reserve(frames.size());
+                std::for_each(frames.begin(), frames.end(), [&](const yarp::experimental::dev::IMUFrameReference& frame){
+                    xsens::FrameReferece reference;
+                    reference.frameName = frame.IMUframeName;
+                    reference.frameReference = frame.IMUframeReference;
                     serializableObject.push_back(reference);
                 });
                 return serializableObject;

@@ -326,9 +326,12 @@ std::vector<yarp::experimental::dev::IMUFrameReference> yarp::dev::XsensMVN::Xse
         XmeSegmentId segmentID = static_cast<XmeSegmentId>(m_connection->segmentIdFromLocation(sensors_status[i].m_locationId));
         XsString segmentName;
         XmeSegmentId_toString(segmentID, &segmentName);
+        std::string segmentNameString = segmentName.toStdString();
+        // Efficient hack to remove whitespaces from segment names
+        segmentNameString.erase(std::remove_if(segmentNameString.begin(), segmentNameString.end(), isspace), segmentNameString.end());
         // TODO: first field (imu reference frame name) should be the sensor frame name, right now leaving empty
         // second field (IMU frame name) should be the sensor frame name, using the name of the link associated to the sensor
-        yarp::experimental::dev::IMUFrameReference frameInfo = { "", segmentName.toStdString() };
+        yarp::experimental::dev::IMUFrameReference frameInfo = { "", segmentNameString };
         sensors.push_back(frameInfo);
     }
      return sensors;

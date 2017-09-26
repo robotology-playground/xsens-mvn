@@ -146,7 +146,7 @@ yarp::experimental::dev::IFrameProviderStatus yarp::dev::XsensMVN::getFrameInfor
     return m_pimpl->getLastSegmentInformation(dummy, segmentPoses, segmentVelocities, segmentAccelerations);
 }
 
-yarp::experimental::dev::IIMUFrameProviderStatus yarp::dev::XsensMVN::getIMUFrameOrientation(std::vector<yarp::sig::Vector>& imuOrientations)
+yarp::experimental::dev::IIMUFrameProviderStatus yarp::dev::XsensMVN::getIMUFrameOrientations(std::vector<yarp::sig::Vector>& imuOrientations)
 {
     //create dummy vectors
     std::vector<yarp::sig::Vector> dummyVelocities, dummyAccelerations, dummyMagneticFields;

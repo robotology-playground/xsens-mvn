@@ -44,7 +44,7 @@ namespace yarp {
                                                                               std::vector<yarp::sig::Vector>& imuLinearAccelerations,
                                                                               std::vector<yarp::sig::Vector>& imuMagneticFields)
             {
-                IIMUFrameProviderStatus status = getIMUFrameOrientation(imuOrientations);
+                IIMUFrameProviderStatus status = getIMUFrameOrientations(imuOrientations);
                 if (status != IIMUFrameProviderStatusOK) {
                     return status;
                 }

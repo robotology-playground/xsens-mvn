@@ -55,7 +55,7 @@ public:
     virtual int IMUFrameIndexForIMUFrame(const IMUFrameReference& IMUFrame);
 
     virtual std::vector<IMUFrameReference> IMUFrames() = 0;
-    virtual yarp::experimental::dev::IIMUFrameProviderStatus getIMUFrameOrientation(std::vector<yarp::sig::Vector>& imuOrientations) = 0;
+    virtual yarp::experimental::dev::IIMUFrameProviderStatus getIMUFrameOrientations(std::vector<yarp::sig::Vector>& imuOrientations) = 0;
     virtual yarp::experimental::dev::IIMUFrameProviderStatus getIMUFrameAngularVelocities(std::vector<yarp::sig::Vector>& imuAngularVelocities) = 0;
     virtual yarp::experimental::dev::IIMUFrameProviderStatus getIMUFrameLinearAccelerations(std::vector<yarp::sig::Vector>& imuLinearAccelerations) = 0;
     virtual yarp::experimental::dev::IIMUFrameProviderStatus getIMUFrameMagneticFields(std::vector<yarp::sig::Vector>& imuMagneticFields) = 0;

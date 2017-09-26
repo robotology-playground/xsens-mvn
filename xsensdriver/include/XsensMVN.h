@@ -69,7 +69,7 @@ public:
     // IIMUFrameProvider interface
     virtual std::vector<yarp::experimental::dev::IMUFrameReference> IMUFrames();
 
-    virtual yarp::experimental::dev::IIMUFrameProviderStatus getIMUFrameOrientation(std::vector<yarp::sig::Vector>& imuOrientations);
+    virtual yarp::experimental::dev::IIMUFrameProviderStatus getIMUFrameOrientations(std::vector<yarp::sig::Vector>& imuOrientations);
     virtual yarp::experimental::dev::IIMUFrameProviderStatus getIMUFrameAngularVelocities(std::vector<yarp::sig::Vector>& imuAngularVelocities);
     virtual yarp::experimental::dev::IIMUFrameProviderStatus getIMUFrameLinearAccelerations(std::vector<yarp::sig::Vector>& imuLinearAccelerations);
     virtual yarp::experimental::dev::IIMUFrameProviderStatus getIMUFrameMagneticFields(std::vector<yarp::sig::Vector>& imuMagneticFields);

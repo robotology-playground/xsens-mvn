@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 2016 iCub Facility
-* Authors: Francesco Romano
+* Copyright (C) 2016-2017 iCub Facility
+* Authors: Francesco Romano, Luca Tagliapietra
 * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
 */
 
@@ -63,14 +63,22 @@ class yarp::dev::XsensMVN::XsensMVNPrivate : public XmeCallback,
     };
 
     mutable std::mutex m_dataMutex;
+    // segment data
     std::vector<yarp::sig::Vector> m_lastSegmentPosesRead;
     std::vector<yarp::sig::Vector> m_lastSegmentVelocitiesRead;
     std::vector<yarp::sig::Vector> m_lastSegmentAccelerationRead;
-    yarp::os::Stamp m_lastSegmentTimestamp;
+
+    std::vector<yarp::sig::Vector> m_lastSensorOrientationsRead;
+    std::vector<yarp::sig::Vector> m_lastSensorVelocitiesRead;
+    std::vector<yarp::sig::Vector> m_lastSensorAccelerationsRead;
+    std::vector<yarp::sig::Vector> m_lastSensorMagneticFieldsRead;
+
+    yarp::os::Stamp m_lastTimestamp;
+
     bool m_acquiring;
 
-    std::vector<yarp::sig::Vector> m_lastIMUsRead;
-    yarp::os::Stamp m_lastIMUsTimestamp;
+    //std::vector<yarp::sig::Vector> m_lastIMUsRead;
+    //yarp::os::Stamp m_lastIMUsTimestamp;
 
     // Hardware callback objects
     std::thread m_processor;
@@ -87,7 +95,6 @@ class yarp::dev::XsensMVN::XsensMVNPrivate : public XmeCallback,
 
     yarp::experimental::dev::IFrameProviderStatus m_driverStatus;
 
-
     XsensMVNPrivate(const XsensMVNPrivate&) = delete;
     XsensMVNPrivate& operator=(const XsensMVNPrivate&) = delete;
 
@@ -102,6 +109,7 @@ public:
 
     //Information on the available hardware/model/etc
     std::vector<yarp::experimental::dev::FrameReference> segmentNames() const;
+    std::vector<yarp::experimental::dev::IMUFrameReference> sensorIDs() const; // to be implemented
 
     bool startAcquisition();
     bool stopAcquisition();
@@ -119,6 +127,12 @@ public:
                                                    std::vector<yarp::sig::Vector>& lastVelocities,
                                                    std::vector<yarp::sig::Vector>& lastAccelerations);
 
+    yarp::experimental::dev::IIMUFrameProviderStatus getLastSensorReadTimestamp(yarp::os::Stamp& timestamp);
+    yarp::experimental::dev::IIMUFrameProviderStatus getLastSensorInformation(yarp::os::Stamp& timestamp,
+                                                                           std::vector<yarp::sig::Vector>& lastOrientations,
+                                                                           std::vector<yarp::sig::Vector>& lastVelocities,
+                                                                           std::vector<yarp::sig::Vector>& lastAccelerations,
+                                                                           std::vector<yarp::sig::Vector>& lastMagneticFields);
 
     // callbacks
     virtual void onHardwareReady(XmeControl* dev);

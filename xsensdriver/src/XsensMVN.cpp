@@ -1,6 +1,6 @@
 /*
-* Copyright (C) 2016 iCub Facility
-* Authors: Francesco Romano
+* Copyright (C) 2016-2017 iCub Facility
+* Authors: Francesco Romano, Luca Tagliapietra
 * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
 */
 
@@ -65,6 +65,12 @@ std::vector<yarp::experimental::dev::FrameReference> yarp::dev::XsensMVN::frames
 {
     assert(m_pimpl);
     return m_pimpl->segmentNames();
+}
+
+std::vector<yarp::experimental::dev::IMUFrameReference> yarp::dev::XsensMVN::IMUFrames()
+{
+    assert(m_pimpl);
+    return m_pimpl->sensorIDs();
 }
 
 bool yarp::dev::XsensMVN::setBodyDimensions(const std::map<std::string, double>& dimensions)
@@ -138,4 +144,42 @@ yarp::experimental::dev::IFrameProviderStatus yarp::dev::XsensMVN::getFrameInfor
     assert(m_pimpl);
     yarp::os::Stamp dummy;
     return m_pimpl->getLastSegmentInformation(dummy, segmentPoses, segmentVelocities, segmentAccelerations);
+}
+
+yarp::experimental::dev::IIMUFrameProviderStatus yarp::dev::XsensMVN::getIMUFrameOrientations(std::vector<yarp::sig::Vector>& imuOrientations)
+{
+    //create dummy vectors
+    std::vector<yarp::sig::Vector> dummyVelocities, dummyAccelerations, dummyMagneticFields;
+    return getIMUFrameInformation(imuOrientations, dummyVelocities, dummyAccelerations, dummyMagneticFields);
+}
+
+yarp::experimental::dev::IIMUFrameProviderStatus yarp::dev::XsensMVN::getIMUFrameAngularVelocities(std::vector<yarp::sig::Vector>& imuAngularVelocities)
+{
+    //create dummy vectors
+    std::vector<yarp::sig::Vector> dummyOrientations, dummyAccelerations, dummyMagneticFields;
+    return getIMUFrameInformation(dummyOrientations, imuAngularVelocities, dummyAccelerations, dummyMagneticFields);
+}
+
+yarp::experimental::dev::IIMUFrameProviderStatus yarp::dev::XsensMVN::getIMUFrameLinearAccelerations(std::vector<yarp::sig::Vector>& imuLinearAccelerations)
+{
+    //create dummy vectors
+    std::vector<yarp::sig::Vector> dummyOrientations, dummyVelocities, dummyMagneticFields;
+    return getIMUFrameInformation(dummyOrientations, dummyVelocities, imuLinearAccelerations, dummyMagneticFields);
+}
+
+yarp::experimental::dev::IIMUFrameProviderStatus yarp::dev::XsensMVN::getIMUFrameMagneticFields(std::vector<yarp::sig::Vector>& imuMagneticFields)
+{
+    //create dummy vectors
+    std::vector<yarp::sig::Vector> dummyOrientations, dummyVelocities, dummyAccelerations;
+    return getIMUFrameInformation(dummyOrientations, dummyVelocities, dummyAccelerations, imuMagneticFields);
+}
+
+yarp::experimental::dev::IIMUFrameProviderStatus yarp::dev::XsensMVN::getIMUFrameInformation(std::vector<yarp::sig::Vector>& imuOrientations,
+                                                                                             std::vector<yarp::sig::Vector>& imuAngularVelocities,
+                                                                                             std::vector<yarp::sig::Vector>& imuLinearAccelerations,
+                                                                                             std::vector<yarp::sig::Vector>& imuMagneticFields)
+{
+    assert(m_pimpl);
+    yarp::os::Stamp dummy;
+    return m_pimpl->getLastSensorInformation(dummy, imuOrientations, imuAngularVelocities, imuLinearAccelerations, imuMagneticFields);
 }

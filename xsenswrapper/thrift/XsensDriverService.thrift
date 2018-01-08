@@ -63,8 +63,17 @@ service XsensDriverService {
      * one used to output the data
      * @return the list of segment names
      */
-    list<FrameReferece> segments();
+    list<FrameReferece> segments_order();
     
+    /** return the Xsens model segments to which sensors are applied to
+     *
+     * \note the order is the same of the 
+     * one used to output the data
+     * @return the list of model segment names associated to Xsens IMUs
+	 * @TODO to fix: first field empty, second field name of the segment associated to the Xsens IMU
+     */
+    list<FrameReferece> imu_segments_order();
+
     /** returns the body dimensions currently used in the Xsens suit
      *
      * \note these are the dimensions currently used by the Xsens,

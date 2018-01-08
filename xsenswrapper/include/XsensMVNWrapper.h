@@ -1,6 +1,6 @@
 /*
-* Copyright(C) 2016 iCub Facility
-* Authors: Francesco Romano
+* Copyright(C) 2016-2017 iCub Facility
+* Authors: Francesco Romano, Luca Tagliapietra
 * CopyPolicy : Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
 */
 
@@ -26,6 +26,7 @@ namespace yarp {
 
 namespace xsens {
     class XsensSegmentsFrame;
+    class XsensSensorsFrame;
 }
 
 class yarp::dev::XsensMVNWrapper : public yarp::dev::DeviceDriver,
@@ -40,7 +41,8 @@ class yarp::dev::XsensMVNWrapper : public yarp::dev::DeviceDriver,
     
 
     //explicitly define the ports we open
-    yarp::os::BufferedPort<xsens::XsensSegmentsFrame>* m_outputPort;
+    yarp::os::BufferedPort<xsens::XsensSegmentsFrame>* m_segmentsOutputPort;
+    yarp::os::BufferedPort<xsens::XsensSensorsFrame>* m_sensorsOutputPort;
     yarp::os::Port* m_commandPort; //this implements the RPC thrift/XsensDriverService service
 
 public:

@@ -18,54 +18,58 @@
 #include <iostream>
 #include <vector>
 
-using namespace std;
 using namespace xmlstream;
 
 bool file_exist(const char* fileName)
 {
-    ifstream infile(fileName);
+    std::ifstream infile(fileName);
     return infile.good();
 }
 
 int main(int argc, char* argv[])
 {
     if (argc != 3) {
-        cerr << "Usage: " << argv[0] << " /path/to/file.xml /path/to/schema.xsd"
-             << endl
-             << endl;
-        return 1;
+        std::cerr << "Usage: " << argv[0] << " /path/to/file.xml /path/to/schema.xsd"
+                  << std::endl
+                  << std::endl;
+        return EXIT_FAILURE;
     }
-    if (not file_exist(argv[1])) {
-        cerr << "Document file doesn't exist!" << endl;
-        return 1;
+
+    if (!file_exist(argv[1])) {
+        std::cerr << "Document file doesn't exist!" << std::endl;
+        return EXIT_FAILURE;
     }
-    if (not file_exist(argv[2])) {
-        cerr << "Schema file doesn't exist!" << endl;
-        return 1;
+
+    if (!file_exist(argv[2])) {
+        std::cerr << "Schema file doesn't exist!" << std::endl;
+        return EXIT_FAILURE;
     }
 
     XMLStreamReader parser;
-    if (parser.setDocument(argv[1])) {
-        cout << "Document loaded" << endl;
+
+    // Parse the document
+    if (!parser.setDocument(argv[1])) {
+        std::cerr << "Error loading document!" << std::endl;
+        return EXIT_FAILURE;
     }
 
-    else {
-        cerr << "Error loading document!" << endl;
-        return 1;
+    std::cout << "Document loaded" << std::endl;
+
+    // Load the document
+    if (!parser.setSchema(argv[2])) {
+        std::cerr << "Error loading the schema!" << std::endl;
+        return EXIT_FAILURE;
     }
 
-    if (parser.setSchema(argv[2]))
-        cout << "Schema loaded and valid" << endl;
+    std::cout << "Schema loaded and valid" << std::endl;
 
-    else {
-        cerr << "Error loading the schema!" << endl;
-        return 1;
+    // Validate the document
+    if (!parser.validate()) {
+        std::cerr << "Document is not valid!" << std::endl;
+        return EXIT_FAILURE;
     }
 
-    if (parser.validate())
-        cout << "Document has been validated successfully" << endl;
-    else {
-        cerr << "Document is not valid!" << endl;
-    }
-    return 0;
+    std::cout << "Document has been validated successfully" << std::endl;
+
+    return EXIT_SUCCESS;
 }

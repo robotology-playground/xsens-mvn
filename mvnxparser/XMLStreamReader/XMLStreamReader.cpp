@@ -17,57 +17,56 @@
 using namespace std;
 using namespace xmlstream;
 
-XMLStreamReader::XMLStreamReader() : XMLStreamReader(string(), string())
+XMLStreamReader::XMLStreamReader(const string& documentFile, const string& schemaFile)
 {
-}
-
-XMLStreamReader::XMLStreamReader(string documentFile)
-    : XMLStreamReader(documentFile, string())
-{
-}
-
-XMLStreamReader::XMLStreamReader(string documentFile, string schemaFile)
-{
-    if (QCoreApplication::instance() == nullptr) {
-        dummyArgc = 1;
-        dummyArgv = new char[1]{' '};
-        coreApp   = new QCoreApplication(dummyArgc, &dummyArgv);
+    // Instantiate QCoreApplication at the first execution
+    if (!QCoreApplication::instance()) {
+        m_dummyArgc = 1;
+        m_dummyArgv = new char[1]{' '};
+        m_coreApp = std::unique_ptr<QCoreApplication>(
+            new QCoreApplication(m_dummyArgc, &m_dummyArgv));
     }
+
+    // Set the document file (absolute path)
     if (!documentFile.empty()) {
         setDocument(documentFile);
     }
 
+    // Set the xml schema file (absolute path)
     if (!schemaFile.empty()) {
         setSchema(schemaFile);
     }
 }
 
-bool XMLStreamReader::setDocument(string documentFile)
+bool XMLStreamReader::setDocument(const string& documentFile)
 {
-    xmlFile.setFileName(QString(documentFile.c_str()));
-    return xmlFile.open(QIODevice::ReadOnly);
+    m_xmlFile.setFileName(QString(documentFile.c_str()));
+    return m_xmlFile.open(QIODevice::ReadOnly);
 }
 
-bool XMLStreamReader::setSchema(string schemaFile)
+bool XMLStreamReader::setSchema(const string& schemaFile)
 {
-    setXmlMessageHandler(handler);
-    schemaUrl = QUrl(("file://" + schemaFile).c_str());
-    return schema.load(schemaUrl);
+    m_schemaUrl = QUrl(("file://" + schemaFile).c_str());
+    return m_schema.load(m_schemaUrl);
 }
 
-void XMLStreamReader::setXmlMessageHandler(XMLMessageHandler& _handler)
+void XMLStreamReader::setXmlMessageHandler(XMLMessageHandler& handler)
 {
-    schema.setMessageHandler(&_handler);
+    m_schema.setMessageHandler(&handler);
 }
 
 bool XMLStreamReader::validate()
 {
-    QXmlSchemaValidator validator(schema);
-    if (not xmlFile.isOpen())
-        xmlFile.open(QIODevice::ReadOnly);
-    return validator.validate(&xmlFile, schemaUrl);
+    QXmlSchemaValidator validator(m_schema);
+
+    if (!m_xmlFile.isOpen()) {
+        m_xmlFile.open(QIODevice::ReadOnly);
+    }
+
+    return validator.validate(&m_xmlFile, m_schemaUrl);
 }
+
 XMLStreamReader::~XMLStreamReader()
 {
-    delete coreApp;
+    delete m_dummyArgv;
 }

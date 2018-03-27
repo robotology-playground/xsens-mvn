@@ -14,13 +14,17 @@
 
 #include "XMLMessageHandler.h"
 
+XMLMessageHandler::XMLMessageHandler()
+    : QAbstractMessageHandler(0)
+{}
+
 void XMLMessageHandler::handleMessage(QtMsgType type,
                                       const QString& description,
-                                      const QUrl& identifier,
+                                      const QUrl& /*identifier*/,
                                       const QSourceLocation& sourceLocation)
 {
-    m_messageType    = type;
-    m_description    = description;
+    m_messageType = type;
+    m_description = description;
     m_sourceLocation = sourceLocation;
     printMessage();
 }

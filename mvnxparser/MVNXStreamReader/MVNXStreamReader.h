@@ -16,52 +16,55 @@
 
 #include "XMLDataContainers.h"
 #include "XMLStreamReader.h"
+
 #include <QXmlStreamReader>
-#include <iostream>
 #include <memory>
 #include <unordered_map>
 #include <vector>
 
 namespace xmlstream {
-namespace mvnx {
+    namespace mvnx {
+        class MVNXStreamReader;
+    }
+} // namespace xmlstream
 
 // Simple container of the mvnx parsing configuration.
-typedef std::unordered_map<std::string, bool> MVNXConfiguration;
+typedef std::string ConfigurationEntry;
+typedef std::unordered_map<ConfigurationEntry, bool> MVNXConfiguration;
 
-class MVNXStreamReader : public xmlstream::XMLStreamReader {
+class xmlstream::mvnx::MVNXStreamReader : public xmlstream::XMLStreamReader
+{
 private:
-    MVNXConfiguration conf;
-    IContentPtrS XMLTreeRoot;
-    std::vector<IContentPtrS> elementsLIFO;
+    MVNXConfiguration m_conf;
+    xmlstream::IContentPtrS m_XMLTreeRoot = nullptr;
+    std::vector<xmlstream::IContentPtrS> m_elementsLIFO;
 
 public:
-    MVNXStreamReader() : XMLTreeRoot(nullptr) {}
-    ~MVNXStreamReader() = default;
+    MVNXStreamReader() = default;
+    virtual ~MVNXStreamReader() = default;
 
     // Get methods
-    MVNXConfiguration getConf() const { return conf; }
-    XMLContentPtrS getXmlTreeRoot() const;
+    MVNXConfiguration getConf() const { return m_conf; }
+    xmlstream::XMLContentPtrS getXmlTreeRoot() const;
 
     // Set methods
-    void setConf(MVNXConfiguration _conf) { conf = _conf; }
+    void setConf(const MVNXConfiguration& conf) { m_conf = conf; }
 
     // Exposed API for parsing, displaying and handling the document
-    bool parse();
+    bool parse() override;
     void printParsedDocument();
-    std::vector<XMLContentPtrS> findElement(std::string ElementName);
+
+    std::vector<xmlstream::XMLContentPtrS>
+    findElement(const xmlstream::ElementName& elementName);
 
 private:
-    void handleStartElement(std::string ElementName,
-                            QXmlStreamAttributes elementAttributes);
-    void handleCharacters(std::string elementText);
-    void handleComment(std::string elementText);
-    void handleStopElement(std::string ElementName);
-    bool elementIsEnabled(std::string ElementName);
-    xmlstream::attributes_t
-    processAttributes(QXmlStreamAttributes elementAttributes);
+    void handleStartElement(const xmlstream::ElementName& name,
+                            const QXmlStreamAttributes& attributes);
+    void handleCharacters(const xmlstream::ElementText& text);
+    void handleComment(const xmlstream::ElementText& text);
+    void handleStopElement(const xmlstream::ElementName& name);
+    bool elementIsEnabled(const xmlstream::ElementName& name);
+    xmlstream::Attributes processAttributes(const QXmlStreamAttributes& attributes);
 };
-
-} // namespace mvnx
-} // namespace xmlstream
 
 #endif // MVNX_STREAM_READER_H

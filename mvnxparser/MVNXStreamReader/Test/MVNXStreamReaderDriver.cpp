@@ -14,7 +14,6 @@
 
 #include "MVNXStreamReader.h"
 #include "XMLDataContainers.h"
-#include <cassert>
 #include <fstream>
 #include <iostream>
 #include <vector>
@@ -31,8 +30,8 @@ bool file_exist(const char* fileName)
 int main(int argc, char* argv[])
 {
     if (argc != 3) {
-        std::cerr << "Usage: " << argv[0] << " /path/to/file.mvnx /path/to/schema.xsd"
-                  << std::endl
+        std::cerr << "Usage: " << argv[0] << " full/path/to/file.mvnx"
+                  << "full/path/to/schema.xsd" << std::endl
                   << std::endl;
         return EXIT_FAILURE;
     }
@@ -51,8 +50,7 @@ int main(int argc, char* argv[])
     MVNXStreamReader mvnx;
     if (mvnx.setDocument(argv[1])) {
         mvnx.setSchema(argv[2]);
-    }
-    else {
+    } else {
         std::cerr << "Failed to load the document!" << std::endl;
         return EXIT_FAILURE;
     }
@@ -70,7 +68,8 @@ int main(int argc, char* argv[])
     // Validate the document with the provided schema and, if successful,
     // parse it.
     if (!mvnx.validate()) {
-        return EXIT_FAILURE;
+        std::cerr << "Validation failed. Proceeeding anyway." << std::endl;
+        // return EXIT_FAILURE;
     }
 
     // For debugging purpose, this function prints all the elements
@@ -97,10 +96,8 @@ int main(int argc, char* argv[])
     XMLContentPtrS xmlRoot = mvnx.getXmlTreeRoot();
 
     // Extract a field, e.g. print all the names of segments
-    IContentPtrS segments = xmlRoot->getChildElement("subject")
-                                ->front()
-                                ->getChildElement("segments")
-                                ->front();
+    IContentPtrS segments
+        = xmlRoot->getChildElement("subject")->front()->getChildElement("segments")->front();
     IContentVecPtrS segmentVector = segments->getChildElement("segment");
     //
     std::cout << "Get segments sweeping the XML tree:" << std::endl;

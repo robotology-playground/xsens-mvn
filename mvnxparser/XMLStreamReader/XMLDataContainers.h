@@ -149,7 +149,7 @@ public:
     getChildElement(xmlstream::ElementName element) const override
     {
         if (m_children->find(element) == m_children->end()) {
-            return {nullptr};
+            return nullptr;
         }
         return m_children->at(element);
     }
@@ -166,7 +166,7 @@ public:
     void setChild(xmlstream::child_ptr childContent) override
     {
         // Not a nullptr
-        assert(_childContent);
+        assert(childContent);
 
         // If setChild() is called, it means that this element has a ELEMENT
         // content

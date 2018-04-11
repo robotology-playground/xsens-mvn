@@ -18,44 +18,146 @@
 #include "XMLStreamReader.h"
 
 #include <QXmlStreamReader>
-#include <memory>
+#include <array>
 #include <unordered_map>
-#include <vector>
 
 namespace xmlstream {
-    namespace mvnx {
-        class MVNXStreamReader;
-    }
+namespace mvnx {
+const int INVALID_FRAME_INDEX = -10;
+class MVNXStreamReader;
+} // namespace mvnx
 } // namespace xmlstream
 
 // Simple container of the mvnx parsing configuration.
-typedef std::string ConfigurationEntry;
-typedef std::unordered_map<ConfigurationEntry, bool> MVNXConfiguration;
+using Point = std::pair<std::string, std::vector<double>>;
+using JointInfo = std::array<std::string, 3>;
+using ConfigurationEntry = std::string;
+using MVNXConfiguration = std::unordered_map<ConfigurationEntry, bool>;
 
-class xmlstream::mvnx::MVNXStreamReader : public xmlstream::XMLStreamReader
-{
+struct FrameInfo {
+    int segmentCount = -1;
+    int sensorCount = -1;
+    int jointCount = -1;
+    int timeFromStart = -1;
+    int index = xmlstream::mvnx::INVALID_FRAME_INDEX;
+    unsigned long clockTimems = -1;
+    std::string clockTime = "";
+    std::string type = "";
+};
+
+struct Frame {
+    // Frame properties
+    FrameInfo properties;
+    std::map<std::string, std::string> data;
+    std::vector<std::string> contacts;
+};
+
+class xmlstream::mvnx::MVNXStreamReader : public xmlstream::XMLStreamReader {
 private:
-    MVNXConfiguration m_conf;
+    int m_xmlFileVersion = -1;
+
+    MVNXConfiguration m_conf; // TODO: REMOVE not supported anymore
     xmlstream::IContentPtrS m_XMLTreeRoot = nullptr;
     std::vector<xmlstream::IContentPtrS> m_elementsLIFO;
 
+    std::vector<std::shared_ptr<Frame>> m_parsedFrames;
+
+    std::map<std::string, std::string> m_xmlKeysMap{
+        {"mvnx", "mvnx"},
+        {"comment", "comment"},
+        {"subject", "subject"},
+        {"segments", "segments"},
+        {"segment", "segment"},
+        {"points", "points"},
+        {"point", "point"},
+        {"pos", ""},
+        {"sensors", "sensors"},
+        {"sensor", "sensor"},
+        {"joints", "joints"},
+        {"joint", "joint"},
+        {"connector1", "connector1"},
+        {"connector2", "connector2"},
+        {"frames", "frames"},
+        {"frame", "frame"},
+        {"link_position", "position"},
+        {"link_velocity", "velocity"},
+        {"link_acceleration", "acceleration"},
+        {"link_orientation", "orientation"},
+        {"link_angular_velocity", "angularVelocity"},
+        {"link_angular_acceleration", "angularAcceleration"},
+        {"sensor_orientation", "sensorOrientation"},
+        {"sensor_angular_velocity", ""},
+        {"sensor_acceleration", ""},
+        {"sensor_free_body_acceleration", ""},
+        {"sensor_magnetic_field", "sensorMagneticField"},
+        {"joint_angle", "jointAngle"},
+        {"joint_angle_xzy", "jointAngleXZY"},
+        {"center_of_mass", "centerOfMass"},
+        {"contacts", "contacts"},
+        {"contact", "contact"}};
+
 public:
+    enum OutputDataType {
+        LINK_POSITION,
+        LINK_VELOCITY,
+        LINK_ACCELERATION,
+        LINK_ORIENTATION,
+        LINK_ANGULAR_VELOCITY,
+        LINK_ANGULAR_ACCELERATION,
+        SENSOR_ORIENTATION,
+        SENSOR_ANGULAR_VELOCITY,
+        SENSOR_ACCELERATION,
+        SENSOR_FREE_BODY_ACCELERATION,
+        SENSOR_MAGNETIC_FIELD,
+        JOINT_ANGLE,
+        JOINT_ANGLE_XZY,
+        CENTER_OF_MASS,
+        CONTACTS // TODO: not yet supported
+    };
+
     MVNXStreamReader() = default;
     virtual ~MVNXStreamReader() = default;
 
     // Get methods
-    MVNXConfiguration getConf() const { return m_conf; }
+    MVNXConfiguration getConf() const { return m_conf; } // TODO: TO REMOVE
     xmlstream::XMLContentPtrS getXmlTreeRoot() const;
 
     // Set methods
-    void setConf(const MVNXConfiguration& conf) { m_conf = conf; }
+    void setConf(const MVNXConfiguration& conf) { m_conf = conf; } // TODO: TO REMOVE
 
     // Exposed API for parsing, displaying and handling the document
     bool parse() override;
-    void printParsedDocument();
+    void printParsedDocument(); // TODO: decide if moving into XML class
 
-    std::vector<xmlstream::XMLContentPtrS>
-    findElement(const xmlstream::ElementName& elementName);
+    const std::vector<xmlstream::XMLContentPtrS>
+    findElement(const xmlstream::ElementName& elementName) const;
+
+    // Helper functions
+    const std::vector<Point> getPoints() const;
+    const std::vector<JointInfo> getJointsInfo() const;
+
+    const std::vector<std::string> getJointNames() const
+    {
+        return getNames(m_xmlKeysMap.at("joint"));
+    }
+    const std::vector<std::string> getSensorNames() const
+    {
+        return getNames(m_xmlKeysMap.at("sensor"));
+    }
+    const std::vector<std::string> getPointNames() const
+    {
+        return getNames(m_xmlKeysMap.at("point"));
+    }
+    const std::vector<std::string> getSegmentNames() const
+    {
+        return getNames(m_xmlKeysMap.at("segment"));
+    }
+
+    void printCalibrationFile_LOG(const std::string& filePath, const char& sep = '\t') const;
+    void printCalibrationFile_XML(const std::string& filePath) const;
+    void printDataFile(const std::string& filePath,
+                       const std::vector<MVNXStreamReader::OutputDataType>& dataList,
+                       const char& sep = '\t') const;
 
 private:
     void handleStartElement(const xmlstream::ElementName& name,
@@ -65,6 +167,34 @@ private:
     void handleStopElement(const xmlstream::ElementName& name);
     bool elementIsEnabled(const xmlstream::ElementName& name);
     xmlstream::Attributes processAttributes(const QXmlStreamAttributes& attributes);
+
+    void configureParser();
+
+    const std::vector<std::string> getNames(const std::string& attributeName) const;
+
+    bool fillFrameInfo(const xmlstream::XMLContentPtrS inFrame, FrameInfo& info) const;
+    bool parseFrame(const xmlstream::XMLContentPtrS inFrame,
+                    Frame& outFrame,
+                    const char& sep = '\t') const;
+    void parseFrames();
+
+    void printFrame(std::stringstream& out,
+                    const Frame& frame,
+                    const std::vector<MVNXStreamReader::OutputDataType>& dataList,
+                    const char& sep = '\t') const;
+    void createLabels(std::stringstream& ss,
+                      const std::vector<MVNXStreamReader::OutputDataType>& dataList,
+                      const char& sep = '\t') const;
+
+    std::string createSingleTypeLabels(const std::string& prefix,
+                                       const std::vector<std::string>& itemLabels,
+                                       const std::vector<std::string>& postfixes,
+                                       const char& sep = '\t') const;
+
+    std::string getSingleDataTypeFromFrame(const std::string& label,
+                                           const Frame& frame,
+                                           const int& sampleSize,
+                                           const char& sep = '\t') const;
 };
 
 #endif // MVNX_STREAM_READER_H

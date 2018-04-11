@@ -5,7 +5,7 @@
 project(MVNXStreamReader VERSION 0.1.0)
 
 # Load dependencies
-find_package(Qt5 COMPONENTS Xml REQUIRED)
+find_package(Qt5 COMPONENTS Xml Core REQUIRED)
 
 # Build the library
 # =================
@@ -28,10 +28,16 @@ target_include_directories(MVNXStreamReader PUBLIC
 add_executable(MVNXStreamReaderDriver ${CMAKE_CURRENT_SOURCE_DIR}/Test/MVNXStreamReaderDriver.cpp)
 target_link_libraries(MVNXStreamReaderDriver MVNXStreamReader)
 
+# Build the application unit executable
+# =====================================
+add_executable(MVNXParser ${CMAKE_CURRENT_SOURCE_DIR}/MVNXParser.cpp)
+target_link_libraries(MVNXParser MVNXStreamReader)
+qt5_use_modules(MVNXParser Core)
+
 # Install the library
 # ===================
 set_target_properties(MVNXStreamReader PROPERTIES PUBLIC_HEADER MVNXStreamReader.h)
-install(TARGETS MVNXStreamReader
+install(TARGETS MVNXStreamReader MVNXParser
         EXPORT MVNXStreamReader
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}

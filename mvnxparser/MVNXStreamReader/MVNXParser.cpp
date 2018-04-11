@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
 
     if (!inputFileInfo.exists()
         || !mvnx.setDocument(inputFileInfo.absoluteFilePath().toStdString())) {
-        std::cerr << "MVNX file not found or unable to open it in read-only mode";
+        std::cerr << "MVNX file not found or unable to open it in read-only mode" << std::endl;
         return EXIT_FAILURE;
     }
 

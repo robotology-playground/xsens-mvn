@@ -66,39 +66,7 @@ private:
 
     std::vector<std::shared_ptr<Frame>> m_parsedFrames;
 
-    std::map<std::string, std::string> m_xmlKeysMap{
-        {"mvnx", "mvnx"},
-        {"comment", "comment"},
-        {"subject", "subject"},
-        {"segments", "segments"},
-        {"segment", "segment"},
-        {"points", "points"},
-        {"point", "point"},
-        {"pos", ""},
-        {"sensors", "sensors"},
-        {"sensor", "sensor"},
-        {"joints", "joints"},
-        {"joint", "joint"},
-        {"connector1", "connector1"},
-        {"connector2", "connector2"},
-        {"frames", "frames"},
-        {"frame", "frame"},
-        {"link_position", "position"},
-        {"link_velocity", "velocity"},
-        {"link_acceleration", "acceleration"},
-        {"link_orientation", "orientation"},
-        {"link_angular_velocity", "angularVelocity"},
-        {"link_angular_acceleration", "angularAcceleration"},
-        {"sensor_orientation", "sensorOrientation"},
-        {"sensor_angular_velocity", ""},
-        {"sensor_acceleration", ""},
-        {"sensor_free_body_acceleration", ""},
-        {"sensor_magnetic_field", "sensorMagneticField"},
-        {"joint_angle", "jointAngle"},
-        {"joint_angle_xzy", "jointAngleXZY"},
-        {"center_of_mass", "centerOfMass"},
-        {"contacts", "contacts"},
-        {"contact", "contact"}};
+    std::map<std::string, std::string> m_xmlKeysMap{};
 
 public:
     enum OutputDataType {
@@ -119,7 +87,7 @@ public:
         CONTACTS // TODO: not yet supported
     };
 
-    MVNXStreamReader() = default;
+    MVNXStreamReader();
     virtual ~MVNXStreamReader() = default;
 
     // Get methods

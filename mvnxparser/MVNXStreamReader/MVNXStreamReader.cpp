@@ -31,6 +31,43 @@ std::vector<double> stringToDoubles(const std::string& aString)
     return vec;
 }
 
+MVNXStreamReader::MVNXStreamReader()
+{
+    m_xmlKeysMap
+        = std::map<std::string, std::string>{{"mvnx", "mvnx"},
+                                             {"comment", "comment"},
+                                             {"subject", "subject"},
+                                             {"segments", "segments"},
+                                             {"segment", "segment"},
+                                             {"points", "points"},
+                                             {"point", "point"},
+                                             {"pos", ""},
+                                             {"sensors", "sensors"},
+                                             {"sensor", "sensor"},
+                                             {"joints", "joints"},
+                                             {"joint", "joint"},
+                                             {"connector1", "connector1"},
+                                             {"connector2", "connector2"},
+                                             {"frames", "frames"},
+                                             {"frame", "frame"},
+                                             {"link_position", "position"},
+                                             {"link_velocity", "velocity"},
+                                             {"link_acceleration", "acceleration"},
+                                             {"link_orientation", "orientation"},
+                                             {"link_angular_velocity", "angularVelocity"},
+                                             {"link_angular_acceleration", "angularAcceleration"},
+                                             {"sensor_orientation", "sensorOrientation"},
+                                             {"sensor_angular_velocity", ""},
+                                             {"sensor_acceleration", ""},
+                                             {"sensor_free_body_acceleration", ""},
+                                             {"sensor_magnetic_field", "sensorMagneticField"},
+                                             {"joint_angle", "jointAngle"},
+                                             {"joint_angle_xzy", "jointAngleXZY"},
+                                             {"center_of_mass", "centerOfMass"},
+                                             {"contacts", "contacts"},
+                                             {"contact", "contact"}};
+}
+
 XMLContentPtrS MVNXStreamReader::getXmlTreeRoot() const
 {
     return std::dynamic_pointer_cast<XMLContent>(m_XMLTreeRoot);
@@ -62,9 +99,9 @@ void MVNXStreamReader::printParsedDocument()
         std::string elementText = xml.text().toString().toStdString();
         elementAttributes = xml.attributes();
 
-        if (not xml.isCharacters()) {
+        if (!xml.isCharacters()) {
             std::cout << tokenString << ": " << elementName << std::endl;
-            if (not elementAttributes.empty()) {
+            if (!elementAttributes.empty()) {
                 for (const auto& element : elementAttributes)
                     std::cout << "   " << element.name().toString().toStdString() << "=\""
                               << element.value().toString().toStdString() << "\"" << std::endl;
@@ -77,7 +114,7 @@ void MVNXStreamReader::printParsedDocument()
         }
 
         // Print the content of the element
-        if (xml.isCharacters() && not xml.isWhitespace())
+        if (xml.isCharacters() && !xml.isWhitespace())
             std::cout << tokenString << ": " << xml.text().toString().toStdString() << std::endl;
     }
 }

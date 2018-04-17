@@ -95,6 +95,11 @@ void MVNXStreamReader::configureParser()
         std::cerr << "Unrecognized MVNX version" << std::endl;
         exit(EXIT_FAILURE);
     }
+
+    // fill info about number of sensors, segments, and joints
+    m_nJoints = getJointNames().size();
+    m_nSegments = getSegmentNames().size();
+    m_nSensors = getSensorNames().size();
 }
 
 bool MVNXStreamReader::parse()
@@ -314,9 +319,9 @@ bool MVNXStreamReader::fillFrameInfo(const xmlstream::XMLContentPtrS inFrame, Fr
         return false;
     }
 
-    info.segmentCount = std::stoi(inFrame->getParent()->getAttribute("segmentCount"));
-    info.sensorCount = std::stoi(inFrame->getParent()->getAttribute("sensorCount"));
-    info.jointCount = std::stoi(inFrame->getParent()->getAttribute("jointCount"));
+    info.segmentCount = m_nSegments;
+    info.sensorCount = m_nSensors;
+    info.jointCount = m_nJoints;
 
     info.timeFromStart = std::stoi(inFrame->getAttribute("time"));
     info.clockTime = inFrame->getAttribute("tc");
@@ -369,6 +374,19 @@ bool MVNXStreamReader::parseFrame(const xmlstream::XMLContentPtrS inFrame,
 void MVNXStreamReader::parseFrames()
 {
     std::vector<XMLContentPtrS> frames = this->findElement(m_xmlKeysMap.at("frame"));
+
+    // Update generic info about number of sensors, segments, and joints from frames attributes
+    if (!frames.front()->getParent()->getAttribute("segmentCount").empty()) {
+        m_nSegments = std::stoi(frames.front()->getParent()->getAttribute("segmentCount"));
+    }
+    if (!frames.front()->getParent()->getAttribute("sensorCount").empty()) {
+        m_nSensors = std::stoi(frames.front()->getParent()->getAttribute("sensorCount"));
+    }
+    if (!frames.front()->getParent()->getAttribute("jointCount").empty()) {
+        m_nJoints = std::stoi(frames.front()->getParent()->getAttribute("jointCount"));
+    }
+
+    // parse the frames
     for (auto& frame : frames) {
         Frame tmpFrame;
         if (!parseFrame(frame, tmpFrame)) {
@@ -620,6 +638,21 @@ void MVNXStreamReader::printCalibrationFile_XML(const std::string& filePath) con
     // Retrieve and write calibration frame elements and their attributes
     stream.writeStartElement(m_xmlKeysMap.at("frames").c_str()); // open frames tag
     auto frames = m_XMLTreeRoot->findChildElements(m_xmlKeysMap.at("frames")).front();
+    // This is required since, due to a but in MVN Analize, they might be not present in the .mvnx
+    // file if it has been exported using the batch process function
+    if (frames->getAttributes().size() != 3) {
+        if (frames->getAttribute("sensorCount").empty()) {
+            stream.writeAttribute("sensorCount", QString::number(m_nSensors));
+        }
+
+        if (frames->getAttribute("segmentCount").empty()) {
+            stream.writeAttribute("segmentCount", QString::number(m_nSegments));
+        }
+
+        if (frames->getAttribute("jointCount").empty()) {
+            stream.writeAttribute("jointCount", QString::number(m_nJoints));
+        }
+    }
     for (const auto& attr : frames->getAttributes()) {
         stream.writeAttribute(attr.first.c_str(), attr.second.c_str());
     }

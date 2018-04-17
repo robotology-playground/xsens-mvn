@@ -56,6 +56,10 @@ class xmlstream::mvnx::MVNXStreamReader : public xmlstream::XMLStreamReader {
 private:
     int m_xmlFileVersion = -1;
 
+    int m_nSensors = -1;
+    int m_nSegments = -1;
+    int m_nJoints = -1;
+
     MVNXConfiguration m_conf; // TODO: REMOVE not supported anymore
     xmlstream::IContentPtrS m_XMLTreeRoot = nullptr;
     std::vector<xmlstream::IContentPtrS> m_elementsLIFO;

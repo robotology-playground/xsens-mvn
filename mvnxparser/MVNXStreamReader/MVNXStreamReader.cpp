@@ -667,7 +667,7 @@ void MVNXStreamReader::createLabels(std::stringstream& ss,
     const std::vector<std::string> sensorNames = getSensorNames();
     const std::vector<std::string> jointNames = getJointNames();
 
-    ss << "index" << sep << "msTime" << sep;
+    ss << "index" << sep << "msTime" << sep << "xSensTime" << sep;
 
     for (const auto& dataType : dataList) {
         switch (dataType) {
@@ -793,7 +793,8 @@ void MVNXStreamReader::printDataFile(const std::string& filePath,
     for (unsigned long i = 0; i < m_parsedFrames.size(); ++i) {
         if (m_parsedFrames.at(i)->properties.type == "normal") {
             ss << m_parsedFrames.at(i)->properties.index << sep
-               << m_parsedFrames.at(i)->properties.clockTimems << sep;
+               << m_parsedFrames.at(i)->properties.clockTimems << sep
+               << m_parsedFrames.at(i)->properties.timeFromStart << sep;
             printFrame(ss, *m_parsedFrames.at(i), dataList, sep);
         }
     }

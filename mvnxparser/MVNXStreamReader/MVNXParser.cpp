@@ -135,7 +135,7 @@ int main(int argc, char* argv[])
         std::string metadataLogFile
             = (outputFolder.absolutePath() + QDir::separator()).toStdString()
               + inputFileInfo.baseName().toStdString() + ".log";
-        mvnx.printCalibrationFile_LOG(metadataLogFile);
+        mvnx.printCalibrationFile_LOG(metadataLogFile, ',');
 
         // print .xml file containing model metadata
         std::string metadataXmlFile
@@ -155,7 +155,8 @@ int main(int argc, char* argv[])
                                MVNXStreamReader::OutputDataType::LINK_ANGULAR_ACCELERATION,
                                MVNXStreamReader::OutputDataType::SENSOR_ORIENTATION,
                                MVNXStreamReader::OutputDataType::SENSOR_FREE_BODY_ACCELERATION,
-                           });
+                           },
+                           ',');
     }
 
     // if modelCreationDataOnly == false print the runtime data
@@ -167,7 +168,8 @@ int main(int argc, char* argv[])
         mvnx.printDataFile(runtimeDataFile,
                            std::vector<MVNXStreamReader::OutputDataType>{
                                MVNXStreamReader::OutputDataType::SENSOR_FREE_BODY_ACCELERATION,
-                           });
+                           },
+                           ',');
     }
 
     return EXIT_SUCCESS;

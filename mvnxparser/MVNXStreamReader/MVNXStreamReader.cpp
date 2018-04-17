@@ -674,43 +674,43 @@ void MVNXStreamReader::createLabels(std::stringstream& ss,
         case LINK_POSITION:
             ss << createSingleTypeLabels(m_xmlKeysMap.at("link_position"),
                                          segmentNames,
-                                         std::vector<std::string>{"X", "Y,", "Z"},
+                                         std::vector<std::string>{"X", "Y", "Z"},
                                          sep);
             break;
         case LINK_VELOCITY:
             ss << createSingleTypeLabels(m_xmlKeysMap.at("link_velocity"),
                                          segmentNames,
-                                         std::vector<std::string>{"X", "Y,", "Z"},
+                                         std::vector<std::string>{"X", "Y", "Z"},
                                          sep);
             break;
         case LINK_ACCELERATION:
             ss << createSingleTypeLabels(m_xmlKeysMap.at("link_acceleration"),
                                          segmentNames,
-                                         std::vector<std::string>{"X", "Y,", "Z"},
+                                         std::vector<std::string>{"X", "Y", "Z"},
                                          sep);
             break;
         case LINK_ORIENTATION:
             ss << createSingleTypeLabels(m_xmlKeysMap.at("link_orientation"),
                                          segmentNames,
-                                         std::vector<std::string>{"W", "X", "Y,", "Z"},
+                                         std::vector<std::string>{"W", "X", "Y", "Z"},
                                          sep);
             break;
         case LINK_ANGULAR_VELOCITY:
             ss << createSingleTypeLabels(m_xmlKeysMap.at("link_angular_velocity"),
                                          segmentNames,
-                                         std::vector<std::string>{"X", "Y,", "Z"},
+                                         std::vector<std::string>{"X", "Y", "Z"},
                                          sep);
             break;
         case LINK_ANGULAR_ACCELERATION:
             ss << createSingleTypeLabels(m_xmlKeysMap.at("link_angular_acceleration"),
                                          segmentNames,
-                                         std::vector<std::string>{"X", "Y,", "Z"},
+                                         std::vector<std::string>{"X", "Y", "Z"},
                                          sep);
             break;
         case SENSOR_ORIENTATION:
             ss << createSingleTypeLabels(m_xmlKeysMap.at("sensor_orientation"),
                                          sensorNames,
-                                         std::vector<std::string>{"W", "X", "Y,", "Z"},
+                                         std::vector<std::string>{"W", "X", "Y", "Z"},
                                          sep);
             break;
         case SENSOR_ANGULAR_VELOCITY:
@@ -721,7 +721,7 @@ void MVNXStreamReader::createLabels(std::stringstream& ss,
             } else {
                 ss << createSingleTypeLabels(m_xmlKeysMap.at("sensor_angular_velocity"),
                                              sensorNames,
-                                             std::vector<std::string>{"X", "Y,", "Z"},
+                                             std::vector<std::string>{"X", "Y", "Z"},
                                              sep);
             }
             break;
@@ -733,7 +733,7 @@ void MVNXStreamReader::createLabels(std::stringstream& ss,
             } else {
                 ss << createSingleTypeLabels(m_xmlKeysMap.at("sensor_acceleration"),
                                              sensorNames,
-                                             std::vector<std::string>{"X", "Y,", "Z"},
+                                             std::vector<std::string>{"X", "Y", "Z"},
                                              sep);
             }
             break;
@@ -746,32 +746,32 @@ void MVNXStreamReader::createLabels(std::stringstream& ss,
             } else {
                 ss << createSingleTypeLabels(m_xmlKeysMap.at("sensor_free_body_acceleration"),
                                              sensorNames,
-                                             std::vector<std::string>{"X", "Y,", "Z"},
+                                             std::vector<std::string>{"X", "Y", "Z"},
                                              sep);
             }
             break;
         case SENSOR_MAGNETIC_FIELD:
             ss << createSingleTypeLabels(m_xmlKeysMap.at("sensor_magnetic_field"),
                                          sensorNames,
-                                         std::vector<std::string>{"X", "Y,", "Z"},
+                                         std::vector<std::string>{"X", "Y", "Z"},
                                          sep);
             break;
         case JOINT_ANGLE:
             ss << createSingleTypeLabels(m_xmlKeysMap.at("joint_angle"),
                                          jointNames,
-                                         std::vector<std::string>{"X", "Y,", "Z"},
+                                         std::vector<std::string>{"X", "Y", "Z"},
                                          sep);
             break;
         case JOINT_ANGLE_XZY:
             ss << createSingleTypeLabels(m_xmlKeysMap.at("joint_angle_xzy"),
                                          jointNames,
-                                         std::vector<std::string>{"X", "Y,", "Z"},
+                                         std::vector<std::string>{"X", "Y", "Z"},
                                          sep);
             break;
         case CENTER_OF_MASS:
             ss << createSingleTypeLabels(m_xmlKeysMap.at("center_of_mass"),
                                          std::vector<std::string>{"com"},
-                                         std::vector<std::string>{"X", "Y,", "Z"},
+                                         std::vector<std::string>{"X", "Y", "Z"},
                                          sep);
             break;
         case CONTACTS:

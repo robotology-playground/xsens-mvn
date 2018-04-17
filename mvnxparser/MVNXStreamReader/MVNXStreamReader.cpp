@@ -320,7 +320,7 @@ bool MVNXStreamReader::fillFrameInfo(const xmlstream::XMLContentPtrS inFrame, Fr
 
     info.timeFromStart = std::stoi(inFrame->getAttribute("time"));
     info.clockTime = inFrame->getAttribute("tc");
-    info.clockTimems = std::stoul(inFrame->getAttribute("ms"));
+    info.clockTimems = std::stoull(inFrame->getAttribute("ms"));
     info.type = inFrame->getAttribute("type");
 
     // need to check since in MVNX v.4 calibration frames does not have indexes while in v.3 they
@@ -728,8 +728,8 @@ void MVNXStreamReader::createLabels(std::stringstream& ss,
             break;
         case SENSOR_ACCELERATION:
             if (m_xmlKeysMap.at("sensor_acceleration").empty()) {
-                std::cerr << "Output option sensor_acceleration not supported for the current "
-                             "MVNX version"
+                std::cerr << "Output option sensor_acceleration not supported for the current MVNX "
+                             "version"
                           << std::endl;
             } else {
                 ss << createSingleTypeLabels(m_xmlKeysMap.at("sensor_acceleration"),
@@ -740,10 +740,9 @@ void MVNXStreamReader::createLabels(std::stringstream& ss,
             break;
         case SENSOR_FREE_BODY_ACCELERATION:
             if (m_xmlKeysMap.at("sensor_free_body_acceleration").empty()) {
-                std::cerr
-                    << "Output option sensor_free_body_acceleration not supported for the current "
-                       "MVNX version"
-                    << std::endl;
+                std::cerr << "Output option sensor_free_body_acceleration not supported for the "
+                             "current MVNX version"
+                          << std::endl;
             } else {
                 ss << createSingleTypeLabels(m_xmlKeysMap.at("sensor_free_body_acceleration"),
                                              sensorNames,

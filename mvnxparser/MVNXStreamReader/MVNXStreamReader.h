@@ -40,7 +40,7 @@ struct FrameInfo {
     int jointCount = -1;
     int timeFromStart = -1;
     int index = xmlstream::mvnx::INVALID_FRAME_INDEX;
-    unsigned long clockTimems = -1;
+    unsigned long long clockTimems = 0;
     std::string clockTime = "";
     std::string type = "";
 };

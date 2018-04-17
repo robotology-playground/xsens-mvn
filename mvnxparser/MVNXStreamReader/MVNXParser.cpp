@@ -110,6 +110,8 @@ int main(int argc, char* argv[])
             std::cerr << "Failed to create default output data folder" << std ::endl;
             return EXIT_FAILURE;
         }
+        outputFolder.setPath(QDir::currentPath() + QDir::separator() + "outputData");
+        outputFolder.makeAbsolute();
     } else {
         outputFolder.setPath(optionsParser.value(targetDirectoryOption));
         outputFolder.makeAbsolute();

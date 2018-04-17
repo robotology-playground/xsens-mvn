@@ -386,6 +386,7 @@ std::string MVNXStreamReader::getSingleDataTypeFromFrame(const std::string& labe
                                                          const char& sep) const
 {
     std::string out;
+    out.append(std::string{sep});
     if (frame.data.count(m_xmlKeysMap.at(label)) != 0
         && !frame.data.at(m_xmlKeysMap.at(label)).empty()) {
         std::string tmp = frame.data.at(m_xmlKeysMap.at(label));
@@ -531,7 +532,7 @@ void MVNXStreamReader::printCalibrationFile_LOG(const std::string& filePath, con
 
     for (int i = 0; m_parsedFrames.at(i)->properties.type != "normal" && i < m_parsedFrames.size();
          ++i) {
-        ss << m_parsedFrames.at(i)->properties.type << sep;
+        ss << m_parsedFrames.at(i)->properties.type;
         printFrame(ss,
                    *m_parsedFrames.at(i),
                    std::vector<MVNXStreamReader::OutputDataType>{LINK_POSITION, LINK_ORIENTATION},
@@ -652,7 +653,7 @@ std::string MVNXStreamReader::createSingleTypeLabels(const std::string& prefix,
     std::stringstream out;
     for (const auto& item : itemLabels) {
         for (const auto& postfix : postfixes) {
-            out << prefix << ":" << item << "." << postfix << sep;
+            out << sep << prefix << ":" << item << "." << postfix;
         };
     }
     return out.str();
@@ -667,7 +668,7 @@ void MVNXStreamReader::createLabels(std::stringstream& ss,
     const std::vector<std::string> sensorNames = getSensorNames();
     const std::vector<std::string> jointNames = getJointNames();
 
-    ss << "index" << sep << "msTime" << sep << "xSensTime" << sep;
+    ss << "index" << sep << "msTime" << sep << "xSensTime";
 
     for (const auto& dataType : dataList) {
         switch (dataType) {
@@ -794,7 +795,7 @@ void MVNXStreamReader::printDataFile(const std::string& filePath,
         if (m_parsedFrames.at(i)->properties.type == "normal") {
             ss << m_parsedFrames.at(i)->properties.index << sep
                << m_parsedFrames.at(i)->properties.clockTimems << sep
-               << m_parsedFrames.at(i)->properties.timeFromStart << sep;
+               << m_parsedFrames.at(i)->properties.timeFromStart;
             printFrame(ss, *m_parsedFrames.at(i), dataList, sep);
         }
     }

@@ -18,19 +18,21 @@
 #include <QtXmlPatterns>
 #include <iostream>
 
-class XMLMessageHandler : public QAbstractMessageHandler {
+class XMLMessageHandler : public QAbstractMessageHandler
+{
 public:
-    XMLMessageHandler() : QAbstractMessageHandler(0) {}
+    XMLMessageHandler();
+
     QString statusMessage() const { return m_description; }
-    int line() const { return m_sourceLocation.line(); }
-    int column() const { return m_sourceLocation.column(); }
+    long long int line() const { return m_sourceLocation.line(); }
+    long long int column() const { return m_sourceLocation.column(); }
     void printMessage() const;
 
 protected:
-    virtual void handleMessage(QtMsgType type,
-                               const QString& description,
-                               const QUrl& identifier,
-                               const QSourceLocation& sourceLocation);
+    void handleMessage(QtMsgType type,
+                       const QString& description,
+                       const QUrl& identifier,
+                       const QSourceLocation& sourceLocation) override;
 
 private:
     QtMsgType m_messageType;

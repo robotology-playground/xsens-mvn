@@ -27,31 +27,30 @@
 #include <vector>
 
 namespace xmlstream {
+    class XMLStreamReader;
+}
 
-class XMLStreamReader {
+class xmlstream::XMLStreamReader
+{
 private:
-    QCoreApplication* coreApp;
-    int dummyArgc;
-    char* dummyArgv;
+    std::unique_ptr<QCoreApplication> m_coreApp = nullptr;
+    int m_dummyArgc;
+    char* m_dummyArgv = nullptr;
 
 protected:
-    QFile xmlFile;
-    QUrl schemaUrl;
-    QXmlSchema schema;
-    XMLMessageHandler handler;
-    bool virtual parse() { return true; };
+    QFile m_xmlFile;
+    QUrl m_schemaUrl;
+    QXmlSchema m_schema;
+    bool virtual parse() { return true; }
 
 public:
-    XMLStreamReader();
-    XMLStreamReader(std::string documentFile);
-    XMLStreamReader(std::string documentFile, std::string schemaFile);
-    bool setDocument(std::string documentFile);
-    bool setSchema(std::string schemaFile);
-    void setXmlMessageHandler(XMLMessageHandler& _handler);
+    XMLStreamReader(const std::string& documentFile = {},
+                    const std::string& schemaFile = {});
+    bool setDocument(const std::string& documentFile);
+    bool setSchema(const std::string& schemaFile);
+    void setXmlMessageHandler(XMLMessageHandler& handler);
     bool validate();
     virtual ~XMLStreamReader();
 };
-
-} // namespace xmlstream
 
 #endif // XML_STREAM_READER_H

@@ -19,9 +19,9 @@ target_include_directories(yarp_experimental PRIVATE $<BUILD_INTERFACE:${CMAKE_C
 target_include_directories(yarp_experimental PUBLIC  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 set_target_properties(yarp_experimental PROPERTIES
-                                        PUBLIC_HEADER "include/yarp/dev/IFrameProvider.h;
-                                                       include/yarp/dev/IIMUFrameProvider.h;
-                                                       include/yarp/dev/IXsensMVNInterface.h")
+                                        PUBLIC_HEADER include/yarp/dev/IFrameProvider.h;
+                                                      include/yarp/dev/IIMUFrameProvider.h;
+                                                      include/yarp/dev/IXsensMVNInterface.h)
 
 install(TARGETS yarp_experimental
         EXPORT YARP_experimental

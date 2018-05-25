@@ -1,16 +1,9 @@
 /*
- * Copyright: (C) 2018 iCub Facility
- * Author: Luca Tagliapietra
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2018 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
- */
-
-/**
- * @file MVNXParser.cpp
- * @brief Application to validate and parse MVNX files, producing metadata files in both LOG and XML
- * formats and data as CSV
- * @author Luca Tagliapietra
- * @date 11/04/2018
+ * This software may be modified and distributed under the terms of the
+ * GNU Lesser General Public License v2.1 or any later version.
  */
 
 #include "MVNXStreamReader.h"
@@ -112,7 +105,8 @@ int main(int argc, char* argv[])
         }
         outputFolder.setPath(QDir::currentPath() + QDir::separator() + "outputData");
         outputFolder.makeAbsolute();
-    } else {
+    }
+    else {
         outputFolder.setPath(optionsParser.value(targetDirectoryOption));
         outputFolder.makeAbsolute();
         if (!outputFolder.exists(outputFolder.absolutePath())
@@ -134,21 +128,21 @@ int main(int argc, char* argv[])
     // if runtimeDataOnly == false print the calibration data
     if (!optionsParser.isSet(runtimeDataOnlyOption)) {
         // print .log file containing model metadata
-        std::string metadataLogFile
-            = (outputFolder.absolutePath() + QDir::separator()).toStdString()
-              + inputFileInfo.baseName().toStdString() + ".log";
+        std::string metadataLogFile =
+            (outputFolder.absolutePath() + QDir::separator()).toStdString()
+            + inputFileInfo.baseName().toStdString() + ".log";
         mvnx.printCalibrationFile_LOG(metadataLogFile, ',');
 
         // print .xml file containing model metadata
-        std::string metadataXmlFile
-            = (outputFolder.absolutePath() + QDir::separator()).toStdString()
-              + inputFileInfo.baseName().toStdString() + ".xml";
+        std::string metadataXmlFile =
+            (outputFolder.absolutePath() + QDir::separator()).toStdString()
+            + inputFileInfo.baseName().toStdString() + ".xml";
         mvnx.printCalibrationFile_XML(metadataXmlFile);
 
         // print .csv file containing data required to create the MAPEST/HDE model
-        std::string modelCreationDataFile
-            = (outputFolder.absolutePath() + QDir::separator()).toStdString()
-              + inputFileInfo.baseName().toStdString() + ".csv";
+        std::string modelCreationDataFile =
+            (outputFolder.absolutePath() + QDir::separator()).toStdString()
+            + inputFileInfo.baseName().toStdString() + ".csv";
         mvnx.printDataFile(modelCreationDataFile,
                            std::vector<MVNXStreamReader::OutputDataType>{
                                MVNXStreamReader::OutputDataType::LINK_ACCELERATION,
@@ -164,9 +158,9 @@ int main(int argc, char* argv[])
     // if modelCreationDataOnly == false print the runtime data
     if (!optionsParser.isSet(modelCreationDataOnlyOption)) {
         // print lightweight CSV file containing only a subset of data for runtime computation
-        std::string runtimeDataFile
-            = (outputFolder.absolutePath() + QDir::separator()).toStdString()
-              + inputFileInfo.baseName().toStdString() + "_runtime.csv";
+        std::string runtimeDataFile =
+            (outputFolder.absolutePath() + QDir::separator()).toStdString()
+            + inputFileInfo.baseName().toStdString() + "_runtime.csv";
         mvnx.printDataFile(runtimeDataFile,
                            std::vector<MVNXStreamReader::OutputDataType>{
                                MVNXStreamReader::OutputDataType::SENSOR_FREE_BODY_ACCELERATION,

@@ -1,7 +1,6 @@
-# Copyright: (C) 2016 iCub Facility - Fondazione Istituto Italiano di Tecnologia
-# Authors: Luca Tagliapietra <luca.tagliapietra@iit.it>
-#          Francesco Romano <francesco.romano@iit.it>
-# CopyPolicy: Released under the terms of the GNU LGPL v2.0+
+# Copyright (C) 2018 Istituto Italiano di Tecnologia (IIT). All rights reserved.
+# This software may be modified and distributed under the terms of the
+# GNU Lesser General Public License v2.1 or any later version.
 
 yarp_prepare_plugin(xsens_mvn TYPE yarp::dev::XsensMVN
                               INCLUDE XsensMVN.h

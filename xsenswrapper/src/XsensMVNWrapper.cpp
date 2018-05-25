@@ -1,51 +1,53 @@
 /*
-* Copyright(C) 2016-2017 iCub Facility
-* Authors: Francesco Romano, Luca Tagliapietra
-* CopyPolicy : Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
-*/
+ * Copyright (C) 2018 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * GNU Lesser General Public License v2.1 or any later version.
+ */
 
 #include "XsensMVNWrapper.h"
 
+#include <thrift/XsensDriverService.h>
 #include <thrift/XsensSegmentsFrame.h>
 #include <thrift/XsensSensorsFrame.h>
-#include <thrift/XsensDriverService.h>
-
-#include <yarp/os/Searchable.h>
-#include <yarp/os/LockGuard.h>
-#include <yarp/os/LogStream.h>
-#include <yarp/os/RateThread.h>
-#include <yarp/os/BufferedPort.h>
-#include <yarp/os/Port.h>
-#include <yarp/os/Mutex.h>
-#include <yarp/os/Value.h>
 #include <yarp/dev/IFrameProvider.h>
 #include <yarp/dev/IIMUFrameProvider.h>
 #include <yarp/dev/IXsensMVNInterface.h>
+#include <yarp/os/BufferedPort.h>
+#include <yarp/os/LockGuard.h>
+#include <yarp/os/LogStream.h>
+#include <yarp/os/Mutex.h>
+#include <yarp/os/Port.h>
+#include <yarp/os/RateThread.h>
+#include <yarp/os/Searchable.h>
+#include <yarp/os/Value.h>
 #include <yarp/sig/Vector.h>
 
-#include <vector>
-#include <cassert>
 #include <algorithm>
+#include <cassert>
+#include <vector>
 
 namespace yarp {
     namespace dev {
 
-        class XsensMVNWrapper::XsensMVNWrapperPrivate : 
-            public yarp::os::RateThread,
-            public xsens::XsensDriverService
+        class XsensMVNWrapper::XsensMVNWrapperPrivate
+            : public yarp::os::RateThread
+            , public xsens::XsensDriverService
         {
 
-            XsensMVNWrapper &m_wrapper;
-        public:
+            XsensMVNWrapper& m_wrapper;
 
+        public:
             XsensMVNWrapperPrivate(XsensMVNWrapper& wrapper)
-            : RateThread(100)
-            , m_wrapper(wrapper)
-            , m_frameProvider(0)
-            , m_imuFrameProvider(0)
-            , m_xsensInterface(0)
-            , m_timedDriver(0)
-            , m_frameCount(0) {}
+                : RateThread(100)
+                , m_wrapper(wrapper)
+                , m_frameProvider(0)
+                , m_imuFrameProvider(0)
+                , m_xsensInterface(0)
+                , m_timedDriver(0)
+                , m_frameCount(0)
+            {}
 
             virtual ~XsensMVNWrapperPrivate() {}
             yarp::os::Mutex m_mutex;
@@ -71,17 +73,20 @@ namespace yarp {
                 assert(m_wrapper.m_segmentsOutputPort);
                 assert(m_wrapper.m_sensorsOutputPort);
 
-                if (!m_frameProvider || !m_imuFrameProvider) return;
-                //read from device
+                if (!m_frameProvider || !m_imuFrameProvider)
+                    return;
+                // read from device
                 yarp::os::LockGuard guard(m_mutex);
 
-                yarp::experimental::dev::IFrameProviderStatus frameStatus = m_frameProvider->getFrameInformation(m_poses, m_velocities, m_accelerations);
-                yarp::experimental::dev::IIMUFrameProviderStatus imuFrameStatus = m_imuFrameProvider->getIMUFrameInformation(m_imuOrientations,
-                                                                                                                             m_imuAngularVelocities,
-                                                                                                                             m_imuLinearAccelerations,
-                                                                                                                             m_imuMagneticFields);
-                xsens::XsensSegmentsFrame &frame = m_wrapper.m_segmentsOutputPort->prepare();
-                xsens::XsensSensorsFrame &imuFrame = m_wrapper.m_sensorsOutputPort->prepare();
+                yarp::experimental::dev::IFrameProviderStatus frameStatus =
+                    m_frameProvider->getFrameInformation(m_poses, m_velocities, m_accelerations);
+                yarp::experimental::dev::IIMUFrameProviderStatus imuFrameStatus =
+                    m_imuFrameProvider->getIMUFrameInformation(m_imuOrientations,
+                                                               m_imuAngularVelocities,
+                                                               m_imuLinearAccelerations,
+                                                               m_imuMagneticFields);
+                xsens::XsensSegmentsFrame& frame = m_wrapper.m_segmentsOutputPort->prepare();
+                xsens::XsensSensorsFrame& imuFrame = m_wrapper.m_sensorsOutputPort->prepare();
 
                 yarp::os::Stamp timestamp = m_timedDriver->getLastInputStamp();
 
@@ -91,7 +96,8 @@ namespace yarp {
                 frame.status = static_cast<xsens::XsensStatus>(frameStatus);
                 imuFrame.status = static_cast<xsens::XsensStatus>(imuFrameStatus);
 
-                if (frameStatus != yarp::experimental::dev::IFrameProviderStatusOK || imuFrameStatus != yarp::experimental::dev::IFrameProviderStatusOK) {
+                if (frameStatus != yarp::experimental::dev::IFrameProviderStatusOK
+                    || imuFrameStatus != yarp::experimental::dev::IFrameProviderStatusOK) {
                     // write without data. Only status
                     // I would like to clear the data so as to transmit only the status.
                     frame.segmentsData.resize(0);
@@ -101,19 +107,18 @@ namespace yarp {
                     return;
                 }
 
-                
                 frame.segmentsData.resize(m_frameCount);
                 for (unsigned seg = 0; seg < m_frameCount; ++seg) {
-                    xsens::Vector3 &position = frame.segmentsData[seg].position;
-                    xsens::Quaternion &orientation = frame.segmentsData[seg].orientation;
-                    xsens::Vector3 &linVelocity = frame.segmentsData[seg].velocity;
-                    xsens::Vector3 &angVelocity = frame.segmentsData[seg].angularVelocity;
-                    xsens::Vector3 &linAcceleration = frame.segmentsData[seg].acceleration;
-                    xsens::Vector3 &angAcceleration = frame.segmentsData[seg].angularAcceleration;
-                   
-                    yarp::sig::Vector &newPose = m_poses[seg];
-                    yarp::sig::Vector &newVelocity = m_velocities[seg];
-                    yarp::sig::Vector &newAcceleration = m_accelerations[seg];
+                    xsens::Vector3& position = frame.segmentsData[seg].position;
+                    xsens::Quaternion& orientation = frame.segmentsData[seg].orientation;
+                    xsens::Vector3& linVelocity = frame.segmentsData[seg].velocity;
+                    xsens::Vector3& angVelocity = frame.segmentsData[seg].angularVelocity;
+                    xsens::Vector3& linAcceleration = frame.segmentsData[seg].acceleration;
+                    xsens::Vector3& angAcceleration = frame.segmentsData[seg].angularAcceleration;
+
+                    yarp::sig::Vector& newPose = m_poses[seg];
+                    yarp::sig::Vector& newVelocity = m_velocities[seg];
+                    yarp::sig::Vector& newAcceleration = m_accelerations[seg];
 
                     position.x = newPose[0];
                     position.y = newPose[1];
@@ -140,15 +145,15 @@ namespace yarp {
 
                 imuFrame.sensorsData.resize(m_imuFrameCount);
                 for (unsigned sens = 0; sens < m_imuFrameCount; ++sens) {
-                    xsens::Quaternion &imuOrientation = imuFrame.sensorsData[sens].orientation;
-                    xsens::Vector3 &imuAngularVelocity = imuFrame.sensorsData[sens].angularVelocity;
-                    xsens::Vector3 &imuLinearAcceleration = imuFrame.sensorsData[sens].acceleration;
-                    xsens::Vector3 &imuMagneticField = imuFrame.sensorsData[sens].magnetometer;
+                    xsens::Quaternion& imuOrientation = imuFrame.sensorsData[sens].orientation;
+                    xsens::Vector3& imuAngularVelocity = imuFrame.sensorsData[sens].angularVelocity;
+                    xsens::Vector3& imuLinearAcceleration = imuFrame.sensorsData[sens].acceleration;
+                    xsens::Vector3& imuMagneticField = imuFrame.sensorsData[sens].magnetometer;
 
-                    yarp::sig::Vector &newImuOrientation = m_imuOrientations[sens];
-                    yarp::sig::Vector &newImuAngularVelocity = m_imuAngularVelocities[sens];
-                    yarp::sig::Vector &newImuLinearAcceleration = m_imuLinearAccelerations[sens];
-                    yarp::sig::Vector &newMagneticField = m_imuMagneticFields[sens];
+                    yarp::sig::Vector& newImuOrientation = m_imuOrientations[sens];
+                    yarp::sig::Vector& newImuAngularVelocity = m_imuAngularVelocities[sens];
+                    yarp::sig::Vector& newImuLinearAcceleration = m_imuLinearAccelerations[sens];
+                    yarp::sig::Vector& newMagneticField = m_imuMagneticFields[sens];
 
                     imuOrientation.w = newImuOrientation[0];
                     imuOrientation.imaginary.x = newImuOrientation[1];
@@ -172,84 +177,99 @@ namespace yarp {
             }
 
             virtual void calibrateAsync() { calibrateWithType(""); }
-           
-            virtual void calibrateAsyncWithType(const std::string& calibrationType) { calibrateWithType(calibrationType);  }
 
-            virtual bool calibrate()
+            virtual void calibrateAsyncWithType(const std::string& calibrationType)
             {
-                return calibrateWithType("");
+                calibrateWithType(calibrationType);
             }
+
+            virtual bool calibrate() { return calibrateWithType(""); }
 
             virtual bool calibrateWithType(const std::string& calibrationType)
             {
-                if (!m_xsensInterface) return false;
-                //resume();
+                if (!m_xsensInterface)
+                    return false;
+                // resume();
                 bool result = m_xsensInterface->calibrate(calibrationType);
-                //suspend();
+                // suspend();
                 return result;
             }
 
             virtual void startAcquisition()
             {
-                if (!m_xsensInterface) return;
+                if (!m_xsensInterface)
+                    return;
                 bool result = m_xsensInterface->startAcquisition();
-                //if (result) resume();
+                // if (result) resume();
             }
 
             virtual void stopAcquisition()
             {
-                if (!m_xsensInterface) return;
+                if (!m_xsensInterface)
+                    return;
                 bool result = m_xsensInterface->stopAcquisition();
-                //if (result) suspend();
+                // if (result) suspend();
             }
 
             virtual std::vector<xsens::FrameReferece> segments_order()
             {
-                if (!m_frameProvider) return std::vector<xsens::FrameReferece>();
-                //convert from underlining yarp::dev object into thrift object
-                std::vector<yarp::experimental::dev::FrameReference> frames = m_frameProvider->frames();
+                if (!m_frameProvider)
+                    return std::vector<xsens::FrameReferece>();
+                // convert from underlining yarp::dev object into thrift object
+                std::vector<yarp::experimental::dev::FrameReference> frames =
+                    m_frameProvider->frames();
                 std::vector<xsens::FrameReferece> serializableObject;
                 serializableObject.reserve(frames.size());
-                std::for_each(frames.begin(), frames.end(), [&](const yarp::experimental::dev::FrameReference& frame){
-                    xsens::FrameReferece reference;
-                    reference.frameName = frame.frameName;
-                    reference.frameReference = frame.frameReference;
-                    serializableObject.push_back(reference);
-                });
+                std::for_each(frames.begin(),
+                              frames.end(),
+                              [&](const yarp::experimental::dev::FrameReference& frame) {
+                                  xsens::FrameReferece reference;
+                                  reference.frameName = frame.frameName;
+                                  reference.frameReference = frame.frameReference;
+                                  serializableObject.push_back(reference);
+                              });
                 return serializableObject;
             }
 
             virtual std::vector<xsens::FrameReferece> imu_segments_order()
             {
-                if (!m_frameProvider) return std::vector<xsens::FrameReferece>();
-                //convert from underlining yarp::dev object into thrift object
-                std::vector<yarp::experimental::dev::IMUFrameReference> frames = m_imuFrameProvider->IMUFrames();
+                if (!m_frameProvider)
+                    return std::vector<xsens::FrameReferece>();
+                // convert from underlining yarp::dev object into thrift object
+                std::vector<yarp::experimental::dev::IMUFrameReference> frames =
+                    m_imuFrameProvider->IMUFrames();
                 std::vector<xsens::FrameReferece> serializableObject;
                 serializableObject.reserve(frames.size());
-                std::for_each(frames.begin(), frames.end(), [&](const yarp::experimental::dev::IMUFrameReference& frame){
-                    xsens::FrameReferece reference;
-                    reference.frameName = frame.IMUframeName;
-                    reference.frameReference = frame.IMUframeReference;
-                    serializableObject.push_back(reference);
-                });
+                std::for_each(frames.begin(),
+                              frames.end(),
+                              [&](const yarp::experimental::dev::IMUFrameReference& frame) {
+                                  xsens::FrameReferece reference;
+                                  reference.frameName = frame.IMUframeName;
+                                  reference.frameReference = frame.IMUframeReference;
+                                  serializableObject.push_back(reference);
+                              });
                 return serializableObject;
             }
 
             virtual std::map<std::string, double> bodyDimensions()
             {
-                if (!m_xsensInterface) return std::map<std::string, double>();
+                if (!m_xsensInterface)
+                    return std::map<std::string, double>();
                 return m_xsensInterface->bodyDimensions();
             }
 
-            virtual bool setBodyDimension(const std::string& dimensionKey, const double dimensionValue)
+            virtual bool setBodyDimension(const std::string& dimensionKey,
+                                          const double dimensionValue)
             {
-                if (!m_xsensInterface) return false;
+                if (!m_xsensInterface)
+                    return false;
                 return m_xsensInterface->setBodyDimension(dimensionKey, dimensionValue);
             }
 
-            virtual bool setBodyDimensions(const std::map<std::string, double> & dimensions)
+            virtual bool setBodyDimensions(const std::map<std::string, double>& dimensions)
             {
-                if (!m_xsensInterface) return false;
+                if (!m_xsensInterface)
+                    return false;
                 return m_xsensInterface->setBodyDimensions(dimensions);
             }
         };
@@ -258,7 +278,8 @@ namespace yarp {
             : m_pimpl(new XsensMVNWrapperPrivate(*this))
             , m_segmentsOutputPort(0)
             , m_sensorsOutputPort(0)
-            , m_commandPort(0) {}
+            , m_commandPort(0)
+        {}
 
         XsensMVNWrapper::~XsensMVNWrapper()
         {
@@ -268,13 +289,15 @@ namespace yarp {
             m_pimpl = 0;
         }
 
-
-        bool XsensMVNWrapper::open(yarp::os::Searchable &config)
+        bool XsensMVNWrapper::open(yarp::os::Searchable& config)
         {
             assert(m_pimpl);
-            int period = config.check("period", yarp::os::Value(100), "Checking wrapper period [ms]").asInt();
+            int period =
+                config.check("period", yarp::os::Value(100), "Checking wrapper period [ms]")
+                    .asInt();
             m_pimpl->setRate(period);
-            yarp::os::ConstString wrapperName = config.check("name", yarp::os::Value("/xsens"), "Checking wrapper name").asString();
+            yarp::os::ConstString wrapperName =
+                config.check("name", yarp::os::Value("/xsens"), "Checking wrapper name").asString();
             if (wrapperName.empty() || wrapperName.at(0) != '/') {
                 yError("Invalid wrapper name '%s'", wrapperName.c_str());
                 return false;
@@ -304,9 +327,9 @@ namespace yarp {
             }
             this->m_pimpl->yarp().attachAsServer(*m_commandPort);
             bool result = m_pimpl->start();
-            //start in suspend mode
-            //We resume only for acquisition
-            //m_pimpl->suspend();
+            // start in suspend mode
+            // We resume only for acquisition
+            // m_pimpl->suspend();
             return result;
         }
 
@@ -338,28 +361,32 @@ namespace yarp {
         yarp::os::Stamp XsensMVNWrapper::getLastInputStamp()
         {
             assert(m_pimpl);
-            if (!m_pimpl->m_timedDriver) return yarp::os::Stamp();
+            if (!m_pimpl->m_timedDriver)
+                return yarp::os::Stamp();
             return m_pimpl->m_timedDriver->getLastInputStamp();
         }
 
         // IWrapper interface
-        bool XsensMVNWrapper::attach(yarp::dev::PolyDriver *poly)
+        bool XsensMVNWrapper::attach(yarp::dev::PolyDriver* poly)
         {
             assert(m_pimpl);
             yarp::os::LockGuard guard(m_pimpl->m_mutex);
 
-            if (!poly 
-                || m_pimpl->m_frameProvider 
-                || m_pimpl->m_imuFrameProvider
-                || m_pimpl->m_xsensInterface) return false;
+            if (!poly || m_pimpl->m_frameProvider || m_pimpl->m_imuFrameProvider
+                || m_pimpl->m_xsensInterface)
+                return false;
 
-            if (!poly->view(m_pimpl->m_frameProvider) || !m_pimpl->m_frameProvider) return false;
-            if (!poly->view(m_pimpl->m_imuFrameProvider) || !m_pimpl->m_imuFrameProvider) return false;
-            if (!poly->view(m_pimpl->m_xsensInterface) || !m_pimpl->m_xsensInterface) return false;
+            if (!poly->view(m_pimpl->m_frameProvider) || !m_pimpl->m_frameProvider)
+                return false;
+            if (!poly->view(m_pimpl->m_imuFrameProvider) || !m_pimpl->m_imuFrameProvider)
+                return false;
+            if (!poly->view(m_pimpl->m_xsensInterface) || !m_pimpl->m_xsensInterface)
+                return false;
 
-            if (!poly->view(m_pimpl->m_timedDriver) || !m_pimpl->m_timedDriver) return false;
+            if (!poly->view(m_pimpl->m_timedDriver) || !m_pimpl->m_timedDriver)
+                return false;
 
-            //resize the vectors
+            // resize the vectors
             m_pimpl->m_frameCount = m_pimpl->m_frameProvider->getFrameCount();
             m_pimpl->m_poses.resize(m_pimpl->m_frameCount);
             m_pimpl->m_velocities.resize(m_pimpl->m_frameCount);
@@ -369,7 +396,7 @@ namespace yarp {
                 m_pimpl->m_velocities[i].resize(6, 0.0);
                 m_pimpl->m_accelerations[i].resize(6, 0.0);
             }
-            xsens::XsensSegmentsFrame &frame = m_segmentsOutputPort->prepare();
+            xsens::XsensSegmentsFrame& frame = m_segmentsOutputPort->prepare();
             frame.segmentsData.reserve(m_pimpl->m_frameCount);
             m_segmentsOutputPort->unprepare();
 
@@ -385,7 +412,7 @@ namespace yarp {
                 m_pimpl->m_imuMagneticFields[i].resize(3, 0.0);
             }
 
-            xsens::XsensSensorsFrame &imuFrame = m_sensorsOutputPort->prepare();
+            xsens::XsensSensorsFrame& imuFrame = m_sensorsOutputPort->prepare();
             imuFrame.sensorsData.reserve(m_pimpl->m_imuFrameCount);
             m_sensorsOutputPort->unprepare();
 
@@ -403,14 +430,14 @@ namespace yarp {
             return true;
         }
 
-        bool XsensMVNWrapper::attachAll(const yarp::dev::PolyDriverList &driverList)
+        bool XsensMVNWrapper::attachAll(const yarp::dev::PolyDriverList& driverList)
         {
             assert(m_pimpl);
             if (driverList.size() > 1) {
                 yError("Only one device to be attached is supported");
                 return false;
             }
-            const yarp::dev::PolyDriverDescriptor *firstDriver = driverList[0];
+            const yarp::dev::PolyDriverDescriptor* firstDriver = driverList[0];
             if (!firstDriver) {
                 yError("Failed to get the driver descriptor");
                 return false;
@@ -424,5 +451,5 @@ namespace yarp {
             return detach();
         }
 
-    }
-}
+    } // namespace dev
+} // namespace yarp

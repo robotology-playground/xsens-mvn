@@ -1,8 +1,10 @@
 /*
-* Copyright(C) 2017 iCub Facility
-* Authors: Luca Tagliapietra
-* CopyPolicy : Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
-*/
+ * Copyright (C) 2018 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * GNU Lesser General Public License v2.1 or any later version.
+ */
 
 #include "IIMUFrameProvider.h"
 
@@ -14,8 +16,8 @@ namespace yarp {
 
             bool IMUFrameReference::operator==(const IMUFrameReference& frame) const
             {
-                return frame.IMUframeName == this->IMUframeName &&
-                       frame.IMUframeReference == this->IMUframeReference;
+                return frame.IMUframeName == this->IMUframeName
+                       && frame.IMUframeReference == this->IMUframeReference;
             }
 
             IIMUFrameProvider::~IIMUFrameProvider() {}
@@ -25,7 +27,7 @@ namespace yarp {
             IMUFrameReference IIMUFrameProvider::IMUFrameAtIndex(unsigned IMUFrameIndex)
             {
                 if (IMUFrameIndex >= getIMUFrameCount()) {
-                    IMUFrameReference dummy = { "", "" };
+                    IMUFrameReference dummy = {"", ""};
                     return dummy;
                 }
                 return IMUFrames()[IMUFrameIndex];
@@ -34,15 +36,18 @@ namespace yarp {
             int IIMUFrameProvider::IMUFrameIndexForIMUFrame(const IMUFrameReference& frame)
             {
                 std::vector<IMUFrameReference> frames = this->IMUFrames();
-                std::vector<IMUFrameReference>::iterator found = std::find(frames.begin(), frames.end(), frame);
-                if (found == frames.end()) return -1;
+                std::vector<IMUFrameReference>::iterator found =
+                    std::find(frames.begin(), frames.end(), frame);
+                if (found == frames.end())
+                    return -1;
                 return std::distance(frames.begin(), found);
             }
 
-            IIMUFrameProviderStatus IIMUFrameProvider::getIMUFrameInformation(std::vector<yarp::sig::Vector>& imuOrientations,
-                                                                              std::vector<yarp::sig::Vector>& imuAngularVelocities,
-                                                                              std::vector<yarp::sig::Vector>& imuLinearAccelerations,
-                                                                              std::vector<yarp::sig::Vector>& imuMagneticFields)
+            IIMUFrameProviderStatus IIMUFrameProvider::getIMUFrameInformation(
+                std::vector<yarp::sig::Vector>& imuOrientations,
+                std::vector<yarp::sig::Vector>& imuAngularVelocities,
+                std::vector<yarp::sig::Vector>& imuLinearAccelerations,
+                std::vector<yarp::sig::Vector>& imuMagneticFields)
             {
                 IIMUFrameProviderStatus status = getIMUFrameOrientations(imuOrientations);
                 if (status != IIMUFrameProviderStatusOK) {
@@ -58,6 +63,6 @@ namespace yarp {
                 }
                 return getIMUFrameMagneticFields(imuMagneticFields);
             }
-        }
-    }
-}
+        } // namespace dev
+    } // namespace experimental
+} // namespace yarp

@@ -1,6 +1,6 @@
-# Copyright: (C) 2018 iCub Facility - Fondazione Istituto Italiano di Tecnologia
-# Authors: Luca Tagliapietra <luca.tagliapietra@iit.it>
-# CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+# Copyright (C) 2018 Istituto Italiano di Tecnologia (IIT). All rights reserved.
+# This software may be modified and distributed under the terms of the
+# GNU Lesser General Public License v2.1 or any later version.
 
 # For every system generate thrift libraries
 yarp_idl_to_dir("${CMAKE_CURRENT_SOURCE_DIR}/thrift/XsensFrame.thrift"

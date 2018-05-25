@@ -1,15 +1,9 @@
 /*
- * Copyright: (C) 2018 iCub Facility
- * Author: Luca Tagliapietra, Diego Ferigo
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2018 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
- */
-
-/**
- * @file MVNXStreamReader.cpp
- * @brief Validate and parse efficiently mvnx files
- * @author Luca Tagliapietra, Diego Ferigo
- * @date 18/04/2017
+ * This software may be modified and distributed under the terms of the
+ * GNU Lesser General Public License v2.1 or any later version.
  */
 
 #include "MVNXStreamReader.h"
@@ -33,39 +27,39 @@ std::vector<double> stringToDoubles(const std::string& aString)
 
 MVNXStreamReader::MVNXStreamReader()
 {
-    m_xmlKeysMap
-        = std::map<std::string, std::string>{{"mvnx", "mvnx"},
-                                             {"comment", "comment"},
-                                             {"subject", "subject"},
-                                             {"segments", "segments"},
-                                             {"segment", "segment"},
-                                             {"points", "points"},
-                                             {"point", "point"},
-                                             {"pos", ""},
-                                             {"sensors", "sensors"},
-                                             {"sensor", "sensor"},
-                                             {"joints", "joints"},
-                                             {"joint", "joint"},
-                                             {"connector1", "connector1"},
-                                             {"connector2", "connector2"},
-                                             {"frames", "frames"},
-                                             {"frame", "frame"},
-                                             {"link_position", "position"},
-                                             {"link_velocity", "velocity"},
-                                             {"link_acceleration", "acceleration"},
-                                             {"link_orientation", "orientation"},
-                                             {"link_angular_velocity", "angularVelocity"},
-                                             {"link_angular_acceleration", "angularAcceleration"},
-                                             {"sensor_orientation", "sensorOrientation"},
-                                             {"sensor_angular_velocity", ""},
-                                             {"sensor_acceleration", ""},
-                                             {"sensor_free_body_acceleration", ""},
-                                             {"sensor_magnetic_field", "sensorMagneticField"},
-                                             {"joint_angle", "jointAngle"},
-                                             {"joint_angle_xzy", "jointAngleXZY"},
-                                             {"center_of_mass", "centerOfMass"},
-                                             {"contacts", "contacts"},
-                                             {"contact", "contact"}};
+    m_xmlKeysMap =
+        std::map<std::string, std::string>{{"mvnx", "mvnx"},
+                                           {"comment", "comment"},
+                                           {"subject", "subject"},
+                                           {"segments", "segments"},
+                                           {"segment", "segment"},
+                                           {"points", "points"},
+                                           {"point", "point"},
+                                           {"pos", ""},
+                                           {"sensors", "sensors"},
+                                           {"sensor", "sensor"},
+                                           {"joints", "joints"},
+                                           {"joint", "joint"},
+                                           {"connector1", "connector1"},
+                                           {"connector2", "connector2"},
+                                           {"frames", "frames"},
+                                           {"frame", "frame"},
+                                           {"link_position", "position"},
+                                           {"link_velocity", "velocity"},
+                                           {"link_acceleration", "acceleration"},
+                                           {"link_orientation", "orientation"},
+                                           {"link_angular_velocity", "angularVelocity"},
+                                           {"link_angular_acceleration", "angularAcceleration"},
+                                           {"sensor_orientation", "sensorOrientation"},
+                                           {"sensor_angular_velocity", ""},
+                                           {"sensor_acceleration", ""},
+                                           {"sensor_free_body_acceleration", ""},
+                                           {"sensor_magnetic_field", "sensorMagneticField"},
+                                           {"joint_angle", "jointAngle"},
+                                           {"joint_angle_xzy", "jointAngleXZY"},
+                                           {"center_of_mass", "centerOfMass"},
+                                           {"contacts", "contacts"},
+                                           {"contact", "contact"}};
 }
 
 XMLContentPtrS MVNXStreamReader::getXmlTreeRoot() const
@@ -125,10 +119,12 @@ void MVNXStreamReader::configureParser()
         m_xmlKeysMap.at("pos") = "pos_s";
         m_xmlKeysMap.at("sensor_angular_velocity") = "sensorAngularVelocity";
         m_xmlKeysMap.at("sensor_acceleration") = "sensorAcceleration";
-    } else if (m_xmlFileVersion == 4) {
+    }
+    else if (m_xmlFileVersion == 4) {
         m_xmlKeysMap.at("pos") = "pos_b";
         m_xmlKeysMap.at("sensor_free_body_acceleration") = "sensorFreeAcceleration";
-    } else {
+    }
+    else {
         std::cerr << "Unrecognized MVNX version" << std::endl;
         exit(EXIT_FAILURE);
     }
@@ -169,29 +165,29 @@ bool MVNXStreamReader::parse()
 
         // Handle the generated events
         switch (tokenType) {
-        case QXmlStreamReader::StartDocument:
-            break;
-        case QXmlStreamReader::StartElement:
-            handleStartElement(elementName, elementAttributes);
-            break;
-        case QXmlStreamReader::Characters:
-            handleCharacters(elementText);
-            break;
-        case QXmlStreamReader::Comment:
-            handleComment(elementText);
-            break;
-        case QXmlStreamReader::EndElement:
-            handleStopElement(elementName);
-            break;
-        case QXmlStreamReader::EndDocument:
-            m_XMLTreeRoot = m_elementsLIFO.front();
-            m_elementsLIFO.pop_back();
-            m_xmlFileVersion = std::stoi(m_XMLTreeRoot->getAttribute("version"));
-            configureParser();
-            parseFrames();
-            break;
-        default:
-            break;
+            case QXmlStreamReader::StartDocument:
+                break;
+            case QXmlStreamReader::StartElement:
+                handleStartElement(elementName, elementAttributes);
+                break;
+            case QXmlStreamReader::Characters:
+                handleCharacters(elementText);
+                break;
+            case QXmlStreamReader::Comment:
+                handleComment(elementText);
+                break;
+            case QXmlStreamReader::EndElement:
+                handleStopElement(elementName);
+                break;
+            case QXmlStreamReader::EndDocument:
+                m_XMLTreeRoot = m_elementsLIFO.front();
+                m_elementsLIFO.pop_back();
+                m_xmlFileVersion = std::stoi(m_XMLTreeRoot->getAttribute("version"));
+                configureParser();
+                parseFrames();
+                break;
+            default:
+                break;
         }
     }
     return true;
@@ -207,8 +203,8 @@ Attributes MVNXStreamReader::processAttributes(const QXmlStreamAttributes& attri
             assert(attribute.name().toString().toStdString().length() != 0);
             assert(attribute.value().toString().toStdString().length() != 0);
             // Process the attribute
-            stringAttributes[attribute.name().toString().toStdString()]
-                = attribute.value().toString().toStdString();
+            stringAttributes[attribute.name().toString().toStdString()] =
+                attribute.value().toString().toStdString();
         }
     }
     return stringAttributes;
@@ -307,8 +303,8 @@ const std::vector<Point> MVNXStreamReader::getPoints() const
         Point aPoint;
         aPoint.first = point->getParent()->getParent()->getAttribute("label") + ":"
                        + point->getAttribute("label");
-        aPoint.second
-            = stringToDoubles(point->getChildElement(m_xmlKeysMap.at("pos"))->front()->getText());
+        aPoint.second =
+            stringToDoubles(point->getChildElement(m_xmlKeysMap.at("pos"))->front()->getText());
         points.push_back(aPoint);
     }
     return points;
@@ -391,7 +387,8 @@ bool MVNXStreamReader::parseFrame(const xmlstream::XMLContentPtrS inFrame,
         for (const auto& child : *(children.second)) {
             if (child->getElementName() != m_xmlKeysMap.at("contacts")) {
                 outFrame.data.emplace(child->getElementName(), child->getText());
-            } else {
+            }
+            else {
                 std::string out{};
                 for (const auto& contacts : *(child->getChildElements())) {
                     for (const auto& contact : *(contacts.second)) {
@@ -447,7 +444,8 @@ std::string MVNXStreamReader::getSingleDataTypeFromFrame(const std::string& labe
         std::string tmp = frame.data.at(m_xmlKeysMap.at(label));
         std::replace(tmp.begin(), tmp.end(), ' ', sep);
         out.append(tmp);
-    } else {
+    }
+    else {
         std::cerr << "Warning: attribute " << label << "not available for frame id "
                   << frame.properties.index << " leaving the field empty." << std::endl;
         for (int k = 0; k < sampleSize; ++k) {
@@ -464,84 +462,90 @@ void MVNXStreamReader::printFrame(std::stringstream& ss,
 {
     for (const auto& dataType : dataList) {
         switch (dataType) {
-        case LINK_POSITION:
-            ss << getSingleDataTypeFromFrame(
-                "link_position", frame, 3 * frame.properties.segmentCount, sep);
-            break;
-        case LINK_VELOCITY:
-            ss << getSingleDataTypeFromFrame(
-                "link_velocity", frame, 3 * frame.properties.segmentCount, sep);
-            break;
-        case LINK_ACCELERATION:
-            ss << getSingleDataTypeFromFrame(
-                "link_acceleration", frame, 3 * frame.properties.segmentCount, sep);
-            break;
-        case LINK_ORIENTATION:
-            ss << getSingleDataTypeFromFrame(
-                "link_orientation", frame, 4 * frame.properties.segmentCount, sep);
-            break;
-        case LINK_ANGULAR_VELOCITY:
-            ss << getSingleDataTypeFromFrame(
-                "link_angular_velocity", frame, 3 * frame.properties.segmentCount, sep);
-            break;
-        case LINK_ANGULAR_ACCELERATION:
-            ss << getSingleDataTypeFromFrame(
-                "link_angular_acceleration", frame, 3 * frame.properties.segmentCount, sep);
-            break;
-        case SENSOR_ORIENTATION:
-            ss << getSingleDataTypeFromFrame(
-                "sensor_orientation", frame, 4 * frame.properties.sensorCount, sep);
-            break;
-        case SENSOR_ANGULAR_VELOCITY:
-            if (m_xmlKeysMap.at("sensor_angular_velocity").empty()) {
-                std::cerr << "Output option sensor_angular_velocity not supported for the current "
-                             "MVNX version"
+            case LINK_POSITION:
+                ss << getSingleDataTypeFromFrame(
+                    "link_position", frame, 3 * frame.properties.segmentCount, sep);
+                break;
+            case LINK_VELOCITY:
+                ss << getSingleDataTypeFromFrame(
+                    "link_velocity", frame, 3 * frame.properties.segmentCount, sep);
+                break;
+            case LINK_ACCELERATION:
+                ss << getSingleDataTypeFromFrame(
+                    "link_acceleration", frame, 3 * frame.properties.segmentCount, sep);
+                break;
+            case LINK_ORIENTATION:
+                ss << getSingleDataTypeFromFrame(
+                    "link_orientation", frame, 4 * frame.properties.segmentCount, sep);
+                break;
+            case LINK_ANGULAR_VELOCITY:
+                ss << getSingleDataTypeFromFrame(
+                    "link_angular_velocity", frame, 3 * frame.properties.segmentCount, sep);
+                break;
+            case LINK_ANGULAR_ACCELERATION:
+                ss << getSingleDataTypeFromFrame(
+                    "link_angular_acceleration", frame, 3 * frame.properties.segmentCount, sep);
+                break;
+            case SENSOR_ORIENTATION:
+                ss << getSingleDataTypeFromFrame(
+                    "sensor_orientation", frame, 4 * frame.properties.sensorCount, sep);
+                break;
+            case SENSOR_ANGULAR_VELOCITY:
+                if (m_xmlKeysMap.at("sensor_angular_velocity").empty()) {
+                    std::cerr
+                        << "Output option sensor_angular_velocity not supported for the current "
+                           "MVNX version"
+                        << std::endl;
+                }
+                else {
+                    ss << getSingleDataTypeFromFrame(
+                        "sensor_angular_velocity", frame, 3 * frame.properties.sensorCount, sep);
+                }
+                break;
+            case SENSOR_ACCELERATION:
+                if (m_xmlKeysMap.at("sensor_acceleration").empty()) {
+                    std::cerr << "Output option sensor_acceleration not supported for the current "
+                                 "MVNX version"
+                              << std::endl;
+                }
+                else {
+                    ss << getSingleDataTypeFromFrame(
+                        "sensor_acceleration", frame, 3 * frame.properties.sensorCount, sep);
+                }
+                break;
+            case SENSOR_FREE_BODY_ACCELERATION:
+                if (m_xmlKeysMap.at("sensor_free_body_acceleration").empty()) {
+                    std::cerr << "Output option sensor_free_body_acceleration not supported for "
+                                 "the current "
+                                 "MVNX version"
+                              << std::endl;
+                }
+                else {
+                    ss << getSingleDataTypeFromFrame("sensor_free_body_acceleration",
+                                                     frame,
+                                                     3 * frame.properties.sensorCount,
+                                                     sep);
+                }
+                break;
+            case SENSOR_MAGNETIC_FIELD:
+                ss << getSingleDataTypeFromFrame(
+                    "sensor_magnetic_field", frame, 3 * frame.properties.sensorCount, sep);
+                break;
+            case JOINT_ANGLE:
+                ss << getSingleDataTypeFromFrame(
+                    "joint_angle", frame, 3 * frame.properties.jointCount, sep);
+                break;
+            case JOINT_ANGLE_XZY:
+                ss << getSingleDataTypeFromFrame(
+                    "joint_angle_xzy", frame, 3 * frame.properties.jointCount, sep);
+                break;
+            case CENTER_OF_MASS:
+                ss << getSingleDataTypeFromFrame("center_of_mass", frame, 3, sep);
+                break;
+            case CONTACTS:
+                std::cerr << "TODO: Contacts are not yet supported. Ignoring for time being."
                           << std::endl;
-            } else {
-                ss << getSingleDataTypeFromFrame(
-                    "sensor_angular_velocity", frame, 3 * frame.properties.sensorCount, sep);
-            }
-            break;
-        case SENSOR_ACCELERATION:
-            if (m_xmlKeysMap.at("sensor_acceleration").empty()) {
-                std::cerr << "Output option sensor_acceleration not supported for the current "
-                             "MVNX version"
-                          << std::endl;
-            } else {
-                ss << getSingleDataTypeFromFrame(
-                    "sensor_acceleration", frame, 3 * frame.properties.sensorCount, sep);
-            }
-            break;
-        case SENSOR_FREE_BODY_ACCELERATION:
-            if (m_xmlKeysMap.at("sensor_free_body_acceleration").empty()) {
-                std::cerr
-                    << "Output option sensor_free_body_acceleration not supported for the current "
-                       "MVNX version"
-                    << std::endl;
-            } else {
-                ss << getSingleDataTypeFromFrame(
-                    "sensor_free_body_acceleration", frame, 3 * frame.properties.sensorCount, sep);
-            }
-            break;
-        case SENSOR_MAGNETIC_FIELD:
-            ss << getSingleDataTypeFromFrame(
-                "sensor_magnetic_field", frame, 3 * frame.properties.sensorCount, sep);
-            break;
-        case JOINT_ANGLE:
-            ss << getSingleDataTypeFromFrame(
-                "joint_angle", frame, 3 * frame.properties.jointCount, sep);
-            break;
-        case JOINT_ANGLE_XZY:
-            ss << getSingleDataTypeFromFrame(
-                "joint_angle_xzy", frame, 3 * frame.properties.jointCount, sep);
-            break;
-        case CENTER_OF_MASS:
-            ss << getSingleDataTypeFromFrame("center_of_mass", frame, 3, sep);
-            break;
-        case CONTACTS:
-            std::cerr << "TODO: Contacts are not yet supported. Ignoring for time being."
-                      << std::endl;
-            break;
+                break;
         }
     }
     ss << std::endl;
@@ -696,7 +700,8 @@ void MVNXStreamReader::printCalibrationFile_XML(const std::string& filePath) con
     for (const auto& frame : frames->findChildElements(m_xmlKeysMap.at("frame"))) {
         if (frame->getAttribute("type") == "normal") {
             break;
-        } else {
+        }
+        else {
             stream.writeStartElement(frame->getElementName().c_str()); // open frame tag
             for (const auto& attr : frame->getAttributes()) {
                 stream.writeAttribute(attr.first.c_str(), attr.second.c_str());
@@ -742,112 +747,118 @@ void MVNXStreamReader::createLabels(std::stringstream& ss,
 
     for (const auto& dataType : dataList) {
         switch (dataType) {
-        case LINK_POSITION:
-            ss << createSingleTypeLabels(m_xmlKeysMap.at("link_position"),
-                                         segmentNames,
-                                         std::vector<std::string>{"X", "Y", "Z"},
-                                         sep);
-            break;
-        case LINK_VELOCITY:
-            ss << createSingleTypeLabels(m_xmlKeysMap.at("link_velocity"),
-                                         segmentNames,
-                                         std::vector<std::string>{"X", "Y", "Z"},
-                                         sep);
-            break;
-        case LINK_ACCELERATION:
-            ss << createSingleTypeLabels(m_xmlKeysMap.at("link_acceleration"),
-                                         segmentNames,
-                                         std::vector<std::string>{"X", "Y", "Z"},
-                                         sep);
-            break;
-        case LINK_ORIENTATION:
-            ss << createSingleTypeLabels(m_xmlKeysMap.at("link_orientation"),
-                                         segmentNames,
-                                         std::vector<std::string>{"W", "X", "Y", "Z"},
-                                         sep);
-            break;
-        case LINK_ANGULAR_VELOCITY:
-            ss << createSingleTypeLabels(m_xmlKeysMap.at("link_angular_velocity"),
-                                         segmentNames,
-                                         std::vector<std::string>{"X", "Y", "Z"},
-                                         sep);
-            break;
-        case LINK_ANGULAR_ACCELERATION:
-            ss << createSingleTypeLabels(m_xmlKeysMap.at("link_angular_acceleration"),
-                                         segmentNames,
-                                         std::vector<std::string>{"X", "Y", "Z"},
-                                         sep);
-            break;
-        case SENSOR_ORIENTATION:
-            ss << createSingleTypeLabels(m_xmlKeysMap.at("sensor_orientation"),
-                                         sensorNames,
-                                         std::vector<std::string>{"W", "X", "Y", "Z"},
-                                         sep);
-            break;
-        case SENSOR_ANGULAR_VELOCITY:
-            if (m_xmlKeysMap.at("sensor_angular_velocity").empty()) {
-                std::cerr << "Output option sensor_angular_velocity not supported for the current "
-                             "MVNX version"
-                          << std::endl;
-            } else {
-                ss << createSingleTypeLabels(m_xmlKeysMap.at("sensor_angular_velocity"),
+            case LINK_POSITION:
+                ss << createSingleTypeLabels(m_xmlKeysMap.at("link_position"),
+                                             segmentNames,
+                                             std::vector<std::string>{"X", "Y", "Z"},
+                                             sep);
+                break;
+            case LINK_VELOCITY:
+                ss << createSingleTypeLabels(m_xmlKeysMap.at("link_velocity"),
+                                             segmentNames,
+                                             std::vector<std::string>{"X", "Y", "Z"},
+                                             sep);
+                break;
+            case LINK_ACCELERATION:
+                ss << createSingleTypeLabels(m_xmlKeysMap.at("link_acceleration"),
+                                             segmentNames,
+                                             std::vector<std::string>{"X", "Y", "Z"},
+                                             sep);
+                break;
+            case LINK_ORIENTATION:
+                ss << createSingleTypeLabels(m_xmlKeysMap.at("link_orientation"),
+                                             segmentNames,
+                                             std::vector<std::string>{"W", "X", "Y", "Z"},
+                                             sep);
+                break;
+            case LINK_ANGULAR_VELOCITY:
+                ss << createSingleTypeLabels(m_xmlKeysMap.at("link_angular_velocity"),
+                                             segmentNames,
+                                             std::vector<std::string>{"X", "Y", "Z"},
+                                             sep);
+                break;
+            case LINK_ANGULAR_ACCELERATION:
+                ss << createSingleTypeLabels(m_xmlKeysMap.at("link_angular_acceleration"),
+                                             segmentNames,
+                                             std::vector<std::string>{"X", "Y", "Z"},
+                                             sep);
+                break;
+            case SENSOR_ORIENTATION:
+                ss << createSingleTypeLabels(m_xmlKeysMap.at("sensor_orientation"),
+                                             sensorNames,
+                                             std::vector<std::string>{"W", "X", "Y", "Z"},
+                                             sep);
+                break;
+            case SENSOR_ANGULAR_VELOCITY:
+                if (m_xmlKeysMap.at("sensor_angular_velocity").empty()) {
+                    std::cerr
+                        << "Output option sensor_angular_velocity not supported for the current "
+                           "MVNX version"
+                        << std::endl;
+                }
+                else {
+                    ss << createSingleTypeLabels(m_xmlKeysMap.at("sensor_angular_velocity"),
+                                                 sensorNames,
+                                                 std::vector<std::string>{"X", "Y", "Z"},
+                                                 sep);
+                }
+                break;
+            case SENSOR_ACCELERATION:
+                if (m_xmlKeysMap.at("sensor_acceleration").empty()) {
+                    std::cerr
+                        << "Output option sensor_acceleration not supported for the current MVNX "
+                           "version"
+                        << std::endl;
+                }
+                else {
+                    ss << createSingleTypeLabels(m_xmlKeysMap.at("sensor_acceleration"),
+                                                 sensorNames,
+                                                 std::vector<std::string>{"X", "Y", "Z"},
+                                                 sep);
+                }
+                break;
+            case SENSOR_FREE_BODY_ACCELERATION:
+                if (m_xmlKeysMap.at("sensor_free_body_acceleration").empty()) {
+                    std::cerr
+                        << "Output option sensor_free_body_acceleration not supported for the "
+                           "current MVNX version"
+                        << std::endl;
+                }
+                else {
+                    ss << createSingleTypeLabels(m_xmlKeysMap.at("sensor_free_body_acceleration"),
+                                                 sensorNames,
+                                                 std::vector<std::string>{"X", "Y", "Z"},
+                                                 sep);
+                }
+                break;
+            case SENSOR_MAGNETIC_FIELD:
+                ss << createSingleTypeLabels(m_xmlKeysMap.at("sensor_magnetic_field"),
                                              sensorNames,
                                              std::vector<std::string>{"X", "Y", "Z"},
                                              sep);
-            }
-            break;
-        case SENSOR_ACCELERATION:
-            if (m_xmlKeysMap.at("sensor_acceleration").empty()) {
-                std::cerr << "Output option sensor_acceleration not supported for the current MVNX "
-                             "version"
-                          << std::endl;
-            } else {
-                ss << createSingleTypeLabels(m_xmlKeysMap.at("sensor_acceleration"),
-                                             sensorNames,
+                break;
+            case JOINT_ANGLE:
+                ss << createSingleTypeLabels(m_xmlKeysMap.at("joint_angle"),
+                                             jointNames,
                                              std::vector<std::string>{"X", "Y", "Z"},
                                              sep);
-            }
-            break;
-        case SENSOR_FREE_BODY_ACCELERATION:
-            if (m_xmlKeysMap.at("sensor_free_body_acceleration").empty()) {
-                std::cerr << "Output option sensor_free_body_acceleration not supported for the "
-                             "current MVNX version"
-                          << std::endl;
-            } else {
-                ss << createSingleTypeLabels(m_xmlKeysMap.at("sensor_free_body_acceleration"),
-                                             sensorNames,
+                break;
+            case JOINT_ANGLE_XZY:
+                ss << createSingleTypeLabels(m_xmlKeysMap.at("joint_angle_xzy"),
+                                             jointNames,
                                              std::vector<std::string>{"X", "Y", "Z"},
                                              sep);
-            }
-            break;
-        case SENSOR_MAGNETIC_FIELD:
-            ss << createSingleTypeLabels(m_xmlKeysMap.at("sensor_magnetic_field"),
-                                         sensorNames,
-                                         std::vector<std::string>{"X", "Y", "Z"},
-                                         sep);
-            break;
-        case JOINT_ANGLE:
-            ss << createSingleTypeLabels(m_xmlKeysMap.at("joint_angle"),
-                                         jointNames,
-                                         std::vector<std::string>{"X", "Y", "Z"},
-                                         sep);
-            break;
-        case JOINT_ANGLE_XZY:
-            ss << createSingleTypeLabels(m_xmlKeysMap.at("joint_angle_xzy"),
-                                         jointNames,
-                                         std::vector<std::string>{"X", "Y", "Z"},
-                                         sep);
-            break;
-        case CENTER_OF_MASS:
-            ss << createSingleTypeLabels(m_xmlKeysMap.at("center_of_mass"),
-                                         std::vector<std::string>{"com"},
-                                         std::vector<std::string>{"X", "Y", "Z"},
-                                         sep);
-            break;
-        case CONTACTS:
-            std::cerr << "TODO: Contacts not yet supported. Ignoring contacs for time being."
-                      << std::endl;
-            break;
+                break;
+            case CENTER_OF_MASS:
+                ss << createSingleTypeLabels(m_xmlKeysMap.at("center_of_mass"),
+                                             std::vector<std::string>{"com"},
+                                             std::vector<std::string>{"X", "Y", "Z"},
+                                             sep);
+                break;
+            case CONTACTS:
+                std::cerr << "TODO: Contacts not yet supported. Ignoring contacs for time being."
+                          << std::endl;
+                break;
         }
     }
     ss << std::endl;

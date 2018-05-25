@@ -1,15 +1,9 @@
 /*
- * Copyright: (C) 2017 iCub Facility
- * Author: Diego Ferigo
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2018 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
- */
-
-/**
- * @file MVNXStreamReaderDriver.cpp
- * @brief Driver for the MVNXStreamReader class
- * @author Diego Ferigo
- * @date 18/04/2017
+ * This software may be modified and distributed under the terms of the
+ * GNU Lesser General Public License v2.1 or any later version.
  */
 
 #include "MVNXStreamReader.h"
@@ -50,7 +44,8 @@ int main(int argc, char* argv[])
     MVNXStreamReader mvnx;
     if (mvnx.setDocument(argv[1])) {
         mvnx.setSchema(argv[2]);
-    } else {
+    }
+    else {
         std::cerr << "Failed to load the document!" << std::endl;
         return EXIT_FAILURE;
     }
@@ -96,8 +91,8 @@ int main(int argc, char* argv[])
     XMLContentPtrS xmlRoot = mvnx.getXmlTreeRoot();
 
     // Extract a field, e.g. print all the names of segments
-    IContentPtrS segments
-        = xmlRoot->getChildElement("subject")->front()->getChildElement("segments")->front();
+    IContentPtrS segments =
+        xmlRoot->getChildElement("subject")->front()->getChildElement("segments")->front();
     IContentVecPtrS segmentVector = segments->getChildElement("segment");
     //
     std::cout << "Get segments sweeping the XML tree:" << std::endl;

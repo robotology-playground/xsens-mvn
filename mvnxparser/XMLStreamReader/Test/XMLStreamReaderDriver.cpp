@@ -1,15 +1,9 @@
 /*
- * Copyright: (C) 2017 iCub Facility
- * Author: Diego Ferigo
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2018 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
- */
-
-/**
- * @file XMLStreamReaderDriver.cpp
- * @brief Driver for the XMLStreamReader class
- * @author Diego Ferigo
- * @date 06/04/2017
+ * This software may be modified and distributed under the terms of the
+ * GNU Lesser General Public License v2.1 or any later version.
  */
 
 #include "XMLStreamReader.h"
@@ -29,8 +23,7 @@ bool file_exist(const char* fileName)
 int main(int argc, char* argv[])
 {
     if (argc != 3) {
-        std::cerr << "Usage: " << argv[0] << " /path/to/file.xml /path/to/schema.xsd"
-                  << std::endl
+        std::cerr << "Usage: " << argv[0] << " /path/to/file.xml /path/to/schema.xsd" << std::endl
                   << std::endl;
         return EXIT_FAILURE;
     }

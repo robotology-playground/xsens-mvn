@@ -1,16 +1,11 @@
 /*
- * Copyright: (C) 2017 iCub Facility
- * Author: Diego Ferigo
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2018 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
+ * This software may be modified and distributed under the terms of the
+ * GNU Lesser General Public License v2.1 or any later version.
  */
 
-/**
- * @file MVNXStreamReader.h
- * @brief Validate and parse efficiently mvnx files
- * @author Diego Ferigo
- * @date 18/04/2017
- */
 #ifndef MVNX_STREAM_READER_H
 #define MVNX_STREAM_READER_H
 
@@ -22,10 +17,10 @@
 #include <unordered_map>
 
 namespace xmlstream {
-namespace mvnx {
-const int INVALID_FRAME_INDEX = -10;
-class MVNXStreamReader;
-} // namespace mvnx
+    namespace mvnx {
+        const int INVALID_FRAME_INDEX = -10;
+        class MVNXStreamReader;
+    } // namespace mvnx
 } // namespace xmlstream
 
 // Simple container of the mvnx parsing configuration.
@@ -34,7 +29,8 @@ using JointInfo = std::array<std::string, 3>;
 using ConfigurationEntry = std::string;
 using MVNXConfiguration = std::unordered_map<ConfigurationEntry, bool>;
 
-struct FrameInfo {
+struct FrameInfo
+{
     int segmentCount = -1;
     int sensorCount = -1;
     int jointCount = -1;
@@ -45,14 +41,16 @@ struct FrameInfo {
     std::string type = "";
 };
 
-struct Frame {
+struct Frame
+{
     // Frame properties
     FrameInfo properties;
     std::map<std::string, std::string> data;
     std::vector<std::string> contacts;
 };
 
-class xmlstream::mvnx::MVNXStreamReader : public xmlstream::XMLStreamReader {
+class xmlstream::mvnx::MVNXStreamReader : public xmlstream::XMLStreamReader
+{
 private:
     int m_xmlFileVersion = -1;
 
@@ -69,7 +67,8 @@ private:
     std::map<std::string, std::string> m_xmlKeysMap{};
 
 public:
-    enum OutputDataType {
+    enum OutputDataType
+    {
         LINK_POSITION,
         LINK_VELOCITY,
         LINK_ACCELERATION,

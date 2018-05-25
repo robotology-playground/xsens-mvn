@@ -1,21 +1,26 @@
 /*
-* Copyright (C) 2016-2017 iCub Facility
-* Authors: Francesco Romano, Luca Tagliapietra
-* CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
-*/
+ * Copyright (C) 2018 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * GNU Lesser General Public License v2.1 or any later version.
+ */
 
 #include "XsensMVNPrivate.h"
 
 #include "XsensMVNCalibrator.h"
 
-#include <xme.h>
-#include <yarp/os/Searchable.h>
-#include <yarp/os/LogStream.h>
-#include <yarp/os/Time.h>
-#include <string>
 #include <chrono>
+#include <string>
+#include <xme.h>
+#include <yarp/os/LogStream.h>
+#include <yarp/os/Searchable.h>
+#include <yarp/os/Time.h>
 
-void yarp::dev::XsensMVN::XsensMVNPrivate::resizeVectorToOuterAndInnerSize(std::vector<yarp::sig::Vector>& vector, unsigned outerSize, unsigned innerSize)
+void yarp::dev::XsensMVN::XsensMVNPrivate::resizeVectorToOuterAndInnerSize(
+    std::vector<yarp::sig::Vector>& vector,
+    unsigned outerSize,
+    unsigned innerSize)
 {
     size_t oldSize = vector.size();
     vector.resize(outerSize);
@@ -37,21 +42,25 @@ yarp::dev::XsensMVN::XsensMVNPrivate::XsensMVNPrivate()
 
 yarp::dev::XsensMVN::XsensMVNPrivate::~XsensMVNPrivate() {}
 
-bool yarp::dev::XsensMVN::XsensMVNPrivate::init(yarp::os::Searchable &config)
+bool yarp::dev::XsensMVN::XsensMVNPrivate::init(yarp::os::Searchable& config)
 {
     std::lock_guard<std::recursive_mutex> globalGuard(m_objectMutex);
-    if (m_connection) return false;
+    if (m_connection)
+        return false;
     m_license = new XmeLicense();
-    if (!m_license) return false;
-    
-    //First thing: retrieve paths. As from Xsens support:
-    //The location of the other files (xmedef, *.mvnc) can be configured at runtime by calling xmeSetPaths. 
-    //This expects in this order: the path to the xmedef.xsb file, also used for the .mvnc files,
-    // the path where props.xsb can be found (probably not useful for you),
-    // the path where you want the xme.log to be put and a Boolean value if you want to remove the old xme.log 
-    // (if you specified a new path). Specifying empty strings will use the default path for those options.
+    if (!m_license)
+        return false;
 
-    //getting TEMP folder
+    // First thing: retrieve paths. As from Xsens support:
+    // The location of the other files (xmedef, *.mvnc) can be configured at runtime by calling
+    // xmeSetPaths. This expects in this order: the path to the xmedef.xsb file, also used for the
+    // .mvnc files,
+    // the path where props.xsb can be found (probably not useful for you),
+    // the path where you want the xme.log to be put and a Boolean value if you want to remove the
+    // old xme.log (if you specified a new path). Specifying empty strings will use the default path
+    // for those options.
+
+    // getting TEMP folder
     TCHAR tempFolder[MAX_PATH + 1];
     if (GetTempPath(MAX_PATH, tempFolder) == 0) {
         yWarning("Failed to retrieve temporary folder");
@@ -62,7 +71,11 @@ bool yarp::dev::XsensMVN::XsensMVNPrivate::init(yarp::os::Searchable &config)
     std::string tempFolderConverted(wideCharString.begin(), wideCharString.end());
     yInfo() << "Temporary directory is " << tempFolderConverted;
 
-    yarp::os::ConstString licenseDir = config.check("license-dir", yarp::os::Value(""), "Checking directory containing license files").asString();
+    yarp::os::ConstString licenseDir = config
+                                           .check("license-dir",
+                                                  yarp::os::Value(""),
+                                                  "Checking directory containing license files")
+                                           .asString();
     xmeSetPaths(licenseDir.c_str(), "", tempFolder, true);
     yInfo("Reading license files from %s", licenseDir.c_str());
 
@@ -76,15 +89,16 @@ bool yarp::dev::XsensMVN::XsensMVNPrivate::init(yarp::os::Searchable &config)
 
     yInfo("--- Available configurations ---");
     XsStringArray configurations = m_connection->configurationList();
-    for (XsStringArray::const_iterator it = configurations.begin();
-        it != configurations.end(); ++it) {
-        yInfo(" - %s",it->c_str());
+    for (XsStringArray::const_iterator it = configurations.begin(); it != configurations.end();
+         ++it) {
+        yInfo(" - %s", it->c_str());
     }
     yInfo("--------------------------------");
 
     bool configFound = false;
-    yarp::os::ConstString configuration = config.check("suit-config", yarp::os::Value(""), "checking MVN configuration").asString();
-    for (const XsString &conf : configurations) {
+    yarp::os::ConstString configuration =
+        config.check("suit-config", yarp::os::Value(""), "checking MVN configuration").asString();
+    for (const XsString& conf : configurations) {
         if (conf == configuration.c_str()) {
             configFound = true;
             break;
@@ -98,15 +112,26 @@ bool yarp::dev::XsensMVN::XsensMVNPrivate::init(yarp::os::Searchable &config)
     }
     yInfo("Using MVN configuration %s", configuration.c_str());
 
-    yarp::os::ConstString referenceFrame = config.check("reference-frame", yarp::os::Value("xsens_world"), "checking absolute reference frame name").asString();
+    yarp::os::ConstString referenceFrame = config
+                                               .check("reference-frame",
+                                                      yarp::os::Value("xsens_world"),
+                                                      "checking absolute reference frame name")
+                                               .asString();
 
-    //I have some problems with custom durations. Use the default milliseconds
-    int scanTimeout = static_cast<int>(config.check("scanTimeout", yarp::os::Value(10.0), "scan timeout before failing (in seconds). -1 for disabling timeout").asDouble() * 1000.0);
+    // I have some problems with custom durations. Use the default milliseconds
+    int scanTimeout = static_cast<int>(
+        config
+            .check("scanTimeout",
+                   yarp::os::Value(10.0),
+                   "scan timeout before failing (in seconds). -1 for disabling timeout")
+            .asDouble()
+        * 1000.0);
     m_connection->setConfiguration(configuration.c_str());
 
-    //This call is asynchronous.
-    //Manually synchronize it
-    //std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now(); //why is this wrong?
+    // This call is asynchronous.
+    // Manually synchronize it
+    // std::chrono::time_point<std::chrono::steady_clock> now = std::chrono::steady_clock::now();
+    // //why is this wrong?
     std::chrono::steady_clock::time_point now = std::chrono::steady_clock::now();
 
     {
@@ -114,7 +139,9 @@ bool yarp::dev::XsensMVN::XsensMVNPrivate::init(yarp::os::Searchable &config)
         m_hardwareFound = false;
         m_connection->setScanMode(true);
         if (scanTimeout > 0) {
-            m_initializationVariable.wait_until(lock, now + std::chrono::milliseconds(scanTimeout), [&]() { return m_hardwareFound; });
+            m_initializationVariable.wait_until(lock,
+                                                now + std::chrono::milliseconds(scanTimeout),
+                                                [&]() { return m_hardwareFound; });
         }
         else {
             m_initializationVariable.wait(lock, [&]() { return m_hardwareFound; });
@@ -122,7 +149,7 @@ bool yarp::dev::XsensMVN::XsensMVNPrivate::init(yarp::os::Searchable &config)
     }
 
     m_connection->setScanMode(false);
-    //I should check if everything is ok..
+    // I should check if everything is ok..
     XmeStatus status = m_connection->status();
     if (!status.isConnected()) {
         yError("Could not connect to suit.");
@@ -130,7 +157,7 @@ bool yarp::dev::XsensMVN::XsensMVNPrivate::init(yarp::os::Searchable &config)
         return false;
     }
 
-    //create processor thread to free computation from MVN callbacks
+    // create processor thread to free computation from MVN callbacks
     m_stopProcessor = false;
     m_processor = std::thread(&yarp::dev::XsensMVN::XsensMVNPrivate::processNewFrame, this);
 
@@ -138,12 +165,13 @@ bool yarp::dev::XsensMVN::XsensMVNPrivate::init(yarp::os::Searchable &config)
     yInfo("--- Available body dimensions ---");
     XsStringArray bodyDimensions = m_connection->bodyDimensionLabelList();
 
-    //Read dimensions from configuration file
-    yarp::os::Bottle configBodyDimensions = config.findGroup("body-dimensions", "Looking for body dimensions group");
+    // Read dimensions from configuration file
+    yarp::os::Bottle configBodyDimensions =
+        config.findGroup("body-dimensions", "Looking for body dimensions group");
     std::map<std::string, double> bodyDimensionsMap;
 
-    for (XsStringArray::const_iterator it = bodyDimensions.begin();
-        it != bodyDimensions.end(); ++it) {
+    for (XsStringArray::const_iterator it = bodyDimensions.begin(); it != bodyDimensions.end();
+         ++it) {
 
         yarp::os::Value dimension = configBodyDimensions.find(it->c_str());
         if (dimension.isNull() || !dimension.isDouble()) {
@@ -153,23 +181,27 @@ bool yarp::dev::XsensMVN::XsensMVNPrivate::init(yarp::os::Searchable &config)
         double dimValue = dimension.asDouble();
         yInfo("%s [%lf]", it->c_str(), dimValue);
         bodyDimensionsMap.insert(std::map<std::string, double>::value_type(it->c_str(), dimValue));
-        
     }
     yInfo("--------------------------------");
-   
+
     yInfo("--- Available calibration methods ---");
     XsStringArray calibrationMethods = m_connection->calibrationLabelList();
     for (XsStringArray::const_iterator it = calibrationMethods.begin();
-        it != calibrationMethods.end(); ++it) {
+         it != calibrationMethods.end();
+         ++it) {
         yInfo("%s", it->c_str());
     }
     yInfo("--------------------------------");
-    yarp::os::ConstString defaultConfiguration = config.check("default-calibration-type", yarp::os::Value("Npose"), "checking default calibration type").asString();
-    //This should not be necessary
+    yarp::os::ConstString defaultConfiguration = config
+                                                     .check("default-calibration-type",
+                                                            yarp::os::Value("Npose"),
+                                                            "checking default calibration type")
+                                                     .asString();
+    // This should not be necessary
     m_defaultCalibrationType.assign(defaultConfiguration.c_str(), defaultConfiguration.length());
     yInfo("Default calibration type: %s", m_defaultCalibrationType.c_str());
 
-    //create a calibrator
+    // create a calibrator
     m_calibrator = new xsens::XsensMVNCalibrator(*m_connection);
     if (!m_calibrator) {
         yError("Could not create a calibrator object");
@@ -185,7 +217,7 @@ bool yarp::dev::XsensMVN::XsensMVNPrivate::init(yarp::os::Searchable &config)
         }
     }
 
-    //Initialize size of vectors (model is set before calibration)
+    // Initialize size of vectors (model is set before calibration)
     resizeVectorToOuterAndInnerSize(m_lastSegmentPosesRead, m_connection->segmentCount(), 7);
     resizeVectorToOuterAndInnerSize(m_lastSegmentVelocitiesRead, m_connection->segmentCount(), 6);
     resizeVectorToOuterAndInnerSize(m_lastSegmentAccelerationRead, m_connection->segmentCount(), 6);
@@ -197,9 +229,12 @@ bool yarp::dev::XsensMVN::XsensMVNPrivate::init(yarp::os::Searchable &config)
 
     yInfo("--- Body model Segments ---");
     std::vector<yarp::experimental::dev::FrameReference> segments = segmentNames();
-    //Segment ID is 1-based, segment Index = segmentID - 1 (i.e. 0-based)
+    // Segment ID is 1-based, segment Index = segmentID - 1 (i.e. 0-based)
     for (unsigned index = 0; index < segments.size(); ++index) {
-        yInfo("[%d]%s_H_%s", index + 1, segments[index].frameReference.c_str(), segments[index].frameName.c_str());
+        yInfo("[%d]%s_H_%s",
+              index + 1,
+              segments[index].frameReference.c_str(),
+              segments[index].frameName.c_str());
     }
     yInfo("--------------------------------");
 
@@ -269,23 +304,24 @@ bool yarp::dev::XsensMVN::XsensMVNPrivate::fini()
         m_connection->disconnectHardware();
 
         std::unique_lock<std::mutex> lock(m_initializationMutex);
-        m_initializationVariable.wait(lock, [&]() { return !m_connection->status().isConnected(); });
-        
-        //Now remove callbacks
+        m_initializationVariable.wait(lock,
+                                      [&]() { return !m_connection->status().isConnected(); });
+
+        // Now remove callbacks
         m_connection->clearCallbackHandlers();
 
         m_connection->destruct();
         m_connection = 0;
     }
-    
-    //Xsens now should not provide anymore callbacks
-    //close the thread
+
+    // Xsens now should not provide anymore callbacks
+    // close the thread
     {
         std::unique_lock<std::mutex> lock(m_processorGuard);
         m_stopProcessor = true;
-        //notify the thread
+        // notify the thread
         m_processorVariable.notify_one();
-        //I still have the lock. Let's join the thread and wait fo its termination
+        // I still have the lock. Let's join the thread and wait fo its termination
     }
     if (m_processor.joinable())
         m_processor.join();
@@ -297,92 +333,105 @@ bool yarp::dev::XsensMVN::XsensMVNPrivate::fini()
     return true;
 }
 
-std::vector<yarp::experimental::dev::FrameReference> yarp::dev::XsensMVN::XsensMVNPrivate::segmentNames() const
+std::vector<yarp::experimental::dev::FrameReference>
+yarp::dev::XsensMVN::XsensMVNPrivate::segmentNames() const
 {
     std::lock_guard<std::recursive_mutex> globalGuard(m_objectMutex);
-    if (!m_connection || m_connection->segmentCount() < 0) return std::vector<yarp::experimental::dev::FrameReference>();
+    if (!m_connection || m_connection->segmentCount() < 0)
+        return std::vector<yarp::experimental::dev::FrameReference>();
 
     std::vector<yarp::experimental::dev::FrameReference> segments;
     segments.reserve(m_connection->segmentCount());
-    //Segment ID is 1-based, segment Index = segmentID - 1 (i.e. 0-based)
+    // Segment ID is 1-based, segment Index = segmentID - 1 (i.e. 0-based)
     for (unsigned index = 0; index < static_cast<unsigned>(m_connection->segmentCount()); ++index) {
-        yarp::experimental::dev::FrameReference frameInfo = { m_referenceFrame, m_connection->segmentName(index + 1).c_str() };
+        yarp::experimental::dev::FrameReference frameInfo = {
+            m_referenceFrame, m_connection->segmentName(index + 1).c_str()};
         segments.push_back(frameInfo);
     }
     return segments;
 }
 
-std::vector<yarp::experimental::dev::IMUFrameReference> yarp::dev::XsensMVN::XsensMVNPrivate::sensorIDs() const
+std::vector<yarp::experimental::dev::IMUFrameReference>
+yarp::dev::XsensMVN::XsensMVNPrivate::sensorIDs() const
 {
     std::lock_guard<std::recursive_mutex> globalGuard(m_objectMutex);
-    if (!m_connection || m_connection->sensorCount() < 0) return std::vector<yarp::experimental::dev::IMUFrameReference>();
+    if (!m_connection || m_connection->sensorCount() < 0)
+        return std::vector<yarp::experimental::dev::IMUFrameReference>();
 
     std::vector<yarp::experimental::dev::IMUFrameReference> sensors;
     sensors.reserve(m_connection->sensorCount());
 
     XmeDeviceStatusArray sensors_status = m_connection->status().suitStatus().m_sensors;
 
-    for (unsigned i = 0; i < static_cast<unsigned>(sensors_status.size()); ++i){
-        XmeSegmentId segmentID = static_cast<XmeSegmentId>(m_connection->segmentIdFromLocation(sensors_status[i].m_locationId));
+    for (unsigned i = 0; i < static_cast<unsigned>(sensors_status.size()); ++i) {
+        XmeSegmentId segmentID = static_cast<XmeSegmentId>(
+            m_connection->segmentIdFromLocation(sensors_status[i].m_locationId));
         XsString segmentName;
         XmeSegmentId_toString(segmentID, &segmentName);
         std::string segmentNameString = segmentName.toStdString();
         // Efficient hack to remove whitespaces from segment names
-        segmentNameString.erase(std::remove_if(segmentNameString.begin(), segmentNameString.end(), isspace), segmentNameString.end());
-        // TODO: first field (imu reference frame name) should be the sensor frame name, right now leaving empty
-        // second field (IMU frame name) should be the sensor frame name, using the name of the link associated to the sensor
-        yarp::experimental::dev::IMUFrameReference frameInfo = { "", segmentNameString };
+        segmentNameString.erase(
+            std::remove_if(segmentNameString.begin(), segmentNameString.end(), isspace),
+            segmentNameString.end());
+        // TODO: first field (imu reference frame name) should be the sensor frame name, right now
+        // leaving empty second field (IMU frame name) should be the sensor frame name, using the
+        // name of the link associated to the sensor
+        yarp::experimental::dev::IMUFrameReference frameInfo = {"", segmentNameString};
         sensors.push_back(frameInfo);
     }
-     return sensors;
+    return sensors;
 }
 
 bool yarp::dev::XsensMVN::XsensMVNPrivate::startAcquisition()
 {
     std::lock_guard<std::recursive_mutex> globalGuard(m_objectMutex);
-    if (!m_connection || !m_connection->status().isConnected()) return false;
-    if (m_calibrator && m_calibrator->isCalibrationInProgress()) return false;
-    //TODO: do some checks also on the status of the device
+    if (!m_connection || !m_connection->status().isConnected())
+        return false;
+    if (m_calibrator && m_calibrator->isCalibrationInProgress())
+        return false;
+    // TODO: do some checks also on the status of the device
     m_acquiring = true;
 
     yInfo("Starting acquiring data");
     m_driverStatus = yarp::experimental::dev::IFrameProviderStatusOK;
     m_connection->setRealTimePoseMode(true);
     return true;
-
 }
 
 bool yarp::dev::XsensMVN::XsensMVNPrivate::stopAcquisition()
 {
     std::lock_guard<std::recursive_mutex> globalGuard(m_objectMutex);
-    if (!m_connection) return false;
+    if (!m_connection)
+        return false;
     m_acquiring = false;
     m_connection->setRealTimePoseMode(false);
-    yInfo("Stopping acquiring data"); 
+    yInfo("Stopping acquiring data");
     m_driverStatus = yarp::experimental::dev::IFrameProviderStatusNoData;
     return true;
 }
 
-
-bool yarp::dev::XsensMVN::XsensMVNPrivate::setBodyDimensions(const std::map<std::string, double>& dimensions)
+bool yarp::dev::XsensMVN::XsensMVNPrivate::setBodyDimensions(
+    const std::map<std::string, double>& dimensions)
 {
     std::lock_guard<std::recursive_mutex> globalGuard(m_objectMutex);
-    if (!m_connection || !m_calibrator) return false;
+    if (!m_connection || !m_calibrator)
+        return false;
     return m_calibrator->setBodyDimensions(dimensions);
 }
 
-std::map<std::string, double> yarp::dev::XsensMVN::XsensMVNPrivate::bodyDimensions() const 
+std::map<std::string, double> yarp::dev::XsensMVN::XsensMVNPrivate::bodyDimensions() const
 {
     std::lock_guard<std::recursive_mutex> globalGuard(m_objectMutex);
     return m_calibrator->bodyDimensions();
 }
 
-bool yarp::dev::XsensMVN::XsensMVNPrivate::calibrateWithType(const std::string &calibrationType)
+bool yarp::dev::XsensMVN::XsensMVNPrivate::calibrateWithType(const std::string& calibrationType)
 {
     std::string calibration = calibrationType;
     {
         std::lock_guard<std::recursive_mutex> globalGuard(m_objectMutex);
-        if (!m_connection || !m_calibrator) return false;
+        if (!m_connection || !m_calibrator)
+            return false;
         if (m_acquiring) {
             yError("Cannot calibrate while acquiring data. Please stop acquisition first");
             return false;
@@ -395,15 +444,13 @@ bool yarp::dev::XsensMVN::XsensMVNPrivate::calibrateWithType(const std::string &
             return false;
         }
     }
-    //Activate output
+    // Activate output
     m_driverStatus = yarp::experimental::dev::IFrameProviderStatusOK;
     bool calibrationResult = m_calibrator->calibrateWithType(calibration);
-    //Deactivate output
+    // Deactivate output
     m_driverStatus = yarp::experimental::dev::IFrameProviderStatusNoData;
     return calibrationResult;
 }
-
-
 
 bool yarp::dev::XsensMVN::XsensMVNPrivate::abortCalibration()
 {
@@ -411,7 +458,8 @@ bool yarp::dev::XsensMVN::XsensMVNPrivate::abortCalibration()
     // if I have to take the same lock of the calibrate function?
     {
         std::lock_guard<std::recursive_mutex> globalGuard(m_objectMutex);
-        if (!m_connection || !m_calibrator) return false;
+        if (!m_connection || !m_calibrator)
+            return false;
     }
     m_driverStatus = yarp::experimental::dev::IFrameProviderStatusNoData;
     m_calibrator->abortCalibration();
@@ -423,18 +471,18 @@ void yarp::dev::XsensMVN::XsensMVNPrivate::processNewFrame()
     yDebug("Entering thread");
     while (true) {
         std::unique_lock<std::mutex> lock(m_processorGuard);
-        //while no data
-        m_processorVariable.wait(lock, [&](){ return m_stopProcessor || m_lastFrameDataWritten; });
-        //last chance to check if we have to return
-        //before starting processing stuff
+        // while no data
+        m_processorVariable.wait(lock, [&]() { return m_stopProcessor || m_lastFrameDataWritten; });
+        // last chance to check if we have to return
+        // before starting processing stuff
         if (m_stopProcessor) {
-            //we should return
+            // we should return
             break;
         }
-        //get the copied data
+        // get the copied data
         FrameData lastFrame = std::move(m_lastFrameData);
         m_lastFrameDataWritten = false;
-        //release lock
+        // release lock
         lock.unlock();
 
         {
@@ -443,39 +491,39 @@ void yarp::dev::XsensMVN::XsensMVNPrivate::processNewFrame()
                 continue;
             }
         }
-        //process incoming pose to obtain information
+        // process incoming pose to obtain information
 
         {
-            //Unique lock for all data?
+            // Unique lock for all data?
             std::lock_guard<std::mutex> readLock(m_dataMutex);
 
-            if (m_lastSegmentPosesRead.size() != lastFrame.pose.m_segmentStates.size() ||
-                m_lastSensorOrientationsRead.size() != lastFrame.sensorsData.size()) {
+            if (m_lastSegmentPosesRead.size() != lastFrame.pose.m_segmentStates.size()
+                || m_lastSensorOrientationsRead.size() != lastFrame.sensorsData.size()) {
                 m_driverStatus = yarp::experimental::dev::IFrameProviderStatusError;
-                continue; //error
+                continue; // error
             }
 
-            //HP: absoluteTime = ms from epoch (as Unix Epoch)
-            //TODO: add option to use xsens time instead of receiver time
+            // HP: absoluteTime = ms from epoch (as Unix Epoch)
+            // TODO: add option to use xsens time instead of receiver time
             int64_t unixTime = lastFrame.pose.m_absoluteTime;
             double time = unixTime / 1000.0;
-            //double time = yarp::os::Time::now();// / 1000.0;
+            // double time = yarp::os::Time::now();// / 1000.0;
             m_lastTimestamp = yarp::os::Stamp(lastFrame.pose.m_frameNumber, time);
 
-            //yInfo("Frame received at %lf - YARP Time %lf", time, yarp::os::Time::now());
-            
+            // yInfo("Frame received at %lf - YARP Time %lf", time, yarp::os::Time::now());
+
             for (unsigned index = 0; index < lastFrame.pose.m_segmentStates.size(); ++index) {
-                const XmeSegmentState &segmentData = lastFrame.pose.m_segmentStates[index];
-                yarp::sig::Vector &segmentPosition = m_lastSegmentPosesRead[index];
-                yarp::sig::Vector &segmentVelocity = m_lastSegmentVelocitiesRead[index];
-                yarp::sig::Vector &segmentAcceleration = m_lastSegmentAccelerationRead[index];
+                const XmeSegmentState& segmentData = lastFrame.pose.m_segmentStates[index];
+                yarp::sig::Vector& segmentPosition = m_lastSegmentPosesRead[index];
+                yarp::sig::Vector& segmentVelocity = m_lastSegmentVelocitiesRead[index];
+                yarp::sig::Vector& segmentAcceleration = m_lastSegmentAccelerationRead[index];
 
                 for (unsigned i = 0; i < 3; ++i) {
-                    //linear part
+                    // linear part
                     segmentPosition(i) = segmentData.m_position[i];
                     segmentVelocity(i) = segmentData.m_velocity[i];
                     segmentAcceleration(i) = segmentData.m_acceleration[i];
-                    //angular part for velocity and acceleration
+                    // angular part for velocity and acceleration
                     segmentVelocity(3 + i) = segmentData.m_angularVelocity[i];
                     segmentAcceleration(3 + i) = segmentData.m_angularAcceleration[i];
                 }
@@ -487,11 +535,11 @@ void yarp::dev::XsensMVN::XsensMVNPrivate::processNewFrame()
             }
 
             for (unsigned index = 0; index < lastFrame.sensorsData.size(); ++index) {
-                const XmeSensorSample &sensorData = lastFrame.sensorsData[index];
-                yarp::sig::Vector &sensorOrientation = m_lastSensorOrientationsRead[index];
-                yarp::sig::Vector &sensorVelocity = m_lastSensorVelocitiesRead[index];
-                yarp::sig::Vector &sensorAcceleration = m_lastSensorAccelerationsRead[index];
-                yarp::sig::Vector &sensorMagneticField = m_lastSensorMagneticFieldsRead[index];
+                const XmeSensorSample& sensorData = lastFrame.sensorsData[index];
+                yarp::sig::Vector& sensorOrientation = m_lastSensorOrientationsRead[index];
+                yarp::sig::Vector& sensorVelocity = m_lastSensorVelocitiesRead[index];
+                yarp::sig::Vector& sensorAcceleration = m_lastSensorAccelerationsRead[index];
+                yarp::sig::Vector& sensorMagneticField = m_lastSensorMagneticFieldsRead[index];
 
                 for (unsigned i = 0; i < 3; ++i) {
                     sensorVelocity(i) = sensorData.m_gyr[i];
@@ -510,36 +558,40 @@ void yarp::dev::XsensMVN::XsensMVNPrivate::processNewFrame()
     yDebug("Exiting thread");
 }
 
-yarp::experimental::dev::IFrameProviderStatus yarp::dev::XsensMVN::XsensMVNPrivate::getLastSegmentReadTimestamp(yarp::os::Stamp& timestamp)
+yarp::experimental::dev::IFrameProviderStatus
+yarp::dev::XsensMVN::XsensMVNPrivate::getLastSegmentReadTimestamp(yarp::os::Stamp& timestamp)
 {
     std::lock_guard<std::mutex> readLock(m_dataMutex);
     timestamp = m_lastTimestamp;
     return m_driverStatus;
 }
 
-yarp::experimental::dev::IIMUFrameProviderStatus yarp::dev::XsensMVN::XsensMVNPrivate::getLastSensorReadTimestamp(yarp::os::Stamp& timestamp)
+yarp::experimental::dev::IIMUFrameProviderStatus
+yarp::dev::XsensMVN::XsensMVNPrivate::getLastSensorReadTimestamp(yarp::os::Stamp& timestamp)
 {
     std::lock_guard<std::mutex> readLock(m_dataMutex);
     timestamp = m_lastTimestamp;
     return yarp::experimental::dev::IIMUFrameProviderStatus(static_cast<int>(m_driverStatus));
 }
 
-yarp::experimental::dev::IFrameProviderStatus yarp::dev::XsensMVN::XsensMVNPrivate::getLastSegmentInformation(yarp::os::Stamp& timestamp,
+yarp::experimental::dev::IFrameProviderStatus
+yarp::dev::XsensMVN::XsensMVNPrivate::getLastSegmentInformation(
+    yarp::os::Stamp& timestamp,
     std::vector<yarp::sig::Vector>& lastPoses,
     std::vector<yarp::sig::Vector>& lastVelocities,
     std::vector<yarp::sig::Vector>& lastAccelerations)
 {
-    //These also ensure all the sizes are the same
+    // These also ensure all the sizes are the same
     if (lastPoses.size() < m_lastSegmentPosesRead.size()) {
-        //This will cause an allocation
+        // This will cause an allocation
         resizeVectorToOuterAndInnerSize(lastPoses, m_lastSegmentPosesRead.size(), 7);
     }
     if (lastVelocities.size() < m_lastSegmentPosesRead.size()) {
-        //This will cause an allocation
+        // This will cause an allocation
         resizeVectorToOuterAndInnerSize(lastVelocities, m_lastSegmentPosesRead.size(), 6);
     }
     if (lastAccelerations.size() < m_lastSegmentPosesRead.size()) {
-        //This will cause an allocation
+        // This will cause an allocation
         resizeVectorToOuterAndInnerSize(lastAccelerations, m_lastSegmentPosesRead.size(), 6);
     }
 
@@ -547,17 +599,18 @@ yarp::experimental::dev::IFrameProviderStatus yarp::dev::XsensMVN::XsensMVNPriva
         std::lock_guard<std::mutex> readLock(m_dataMutex);
 
         if (m_acquiring) {
-            //we should receive data
+            // we should receive data
             double now = yarp::os::Time::now();
             if ((now - m_lastTimestamp.getTime()) > 1.0) {
                 m_driverStatus = yarp::experimental::dev::IFrameProviderStatusTimeout;
             }
-            //yInfo("Reading data with time %lf at YARP Time %lf", m_lastSegmentTimestamp.getTime(), now);
+            // yInfo("Reading data with time %lf at YARP Time %lf",
+            // m_lastSegmentTimestamp.getTime(), now);
             /*else {
                 m_driverStatus = yarp::experimental::dev::IFrameProviderStatusOK;
             }*/
         }
-        //get anyway data out
+        // get anyway data out
         timestamp = m_lastTimestamp;
         for (unsigned i = 0; i < m_lastSegmentPosesRead.size(); ++i) {
             lastPoses[i] = m_lastSegmentPosesRead[i];
@@ -566,48 +619,52 @@ yarp::experimental::dev::IFrameProviderStatus yarp::dev::XsensMVN::XsensMVNPriva
         }
     }
 
-   return m_driverStatus;
+    return m_driverStatus;
 }
 
-yarp::experimental::dev::IIMUFrameProviderStatus yarp::dev::XsensMVN::XsensMVNPrivate::getLastSensorInformation(yarp::os::Stamp& timestamp,
+yarp::experimental::dev::IIMUFrameProviderStatus
+yarp::dev::XsensMVN::XsensMVNPrivate::getLastSensorInformation(
+    yarp::os::Stamp& timestamp,
     std::vector<yarp::sig::Vector>& lastOrientations,
     std::vector<yarp::sig::Vector>& lastVelocities,
     std::vector<yarp::sig::Vector>& lastAccelerations,
     std::vector<yarp::sig::Vector>& lastMagneticFields)
 {
-    //These also ensure all the sizes are the same
+    // These also ensure all the sizes are the same
     if (lastOrientations.size() < m_lastSensorOrientationsRead.size()) {
-        //This will cause an allocation
+        // This will cause an allocation
         resizeVectorToOuterAndInnerSize(lastOrientations, m_lastSensorOrientationsRead.size(), 4);
     }
     if (lastVelocities.size() < m_lastSensorVelocitiesRead.size()) {
-        //This will cause an allocation
+        // This will cause an allocation
         resizeVectorToOuterAndInnerSize(lastVelocities, m_lastSensorVelocitiesRead.size(), 3);
     }
     if (lastAccelerations.size() < m_lastSensorAccelerationsRead.size()) {
-        //This will cause an allocation
+        // This will cause an allocation
         resizeVectorToOuterAndInnerSize(lastAccelerations, m_lastSensorAccelerationsRead.size(), 3);
     }
     if (lastMagneticFields.size() < m_lastSensorMagneticFieldsRead.size()) {
-        //This will cause an allocation
-        resizeVectorToOuterAndInnerSize(lastMagneticFields, m_lastSensorMagneticFieldsRead.size(), 3);
+        // This will cause an allocation
+        resizeVectorToOuterAndInnerSize(
+            lastMagneticFields, m_lastSensorMagneticFieldsRead.size(), 3);
     }
 
     {
         std::lock_guard<std::mutex> readLock(m_dataMutex);
 
         if (m_acquiring) {
-            //we should receive data
+            // we should receive data
             double now = yarp::os::Time::now();
             if ((now - m_lastTimestamp.getTime()) > 1.0) {
                 m_driverStatus = yarp::experimental::dev::IFrameProviderStatusTimeout;
             }
-            //yInfo("Reading data with time %lf at YARP Time %lf", m_lastSegmentTimestamp.getTime(), now);
+            // yInfo("Reading data with time %lf at YARP Time %lf",
+            // m_lastSegmentTimestamp.getTime(), now);
             /*else {
             m_driverStatus = yarp::experimental::dev::IFrameProviderStatusOK;
             }*/
         }
-        //get anyway data out
+        // get anyway data out
         timestamp = m_lastTimestamp;
         for (unsigned i = 0; i < m_lastSensorOrientationsRead.size(); ++i) {
             lastOrientations[i] = m_lastSensorOrientationsRead[i];
@@ -620,7 +677,7 @@ yarp::experimental::dev::IIMUFrameProviderStatus yarp::dev::XsensMVN::XsensMVNPr
 }
 
 // Callback functions
-void yarp::dev::XsensMVN::XsensMVNPrivate::onHardwareReady(XmeControl *dev)
+void yarp::dev::XsensMVN::XsensMVNPrivate::onHardwareReady(XmeControl* dev)
 {
     yInfo("Ready");
     std::unique_lock<std::mutex> lock(m_initializationMutex);
@@ -632,8 +689,8 @@ void yarp::dev::XsensMVN::XsensMVNPrivate::onHardwareError(XmeControl* dev)
 {
     XmeStatus status = dev->status();
     yWarning("Hw error received.\nSuit connected? %s\nSuit scanning? %s",
-        (status.isConnected() ? "yes" : "no"),
-        (status.isScanning() ? "yes" : "no"));
+             (status.isConnected() ? "yes" : "no"),
+             (status.isScanning() ? "yes" : "no"));
 }
 
 void yarp::dev::XsensMVN::XsensMVNPrivate::onPoseReady(XmeControl* dev)
@@ -642,17 +699,15 @@ void yarp::dev::XsensMVN::XsensMVNPrivate::onPoseReady(XmeControl* dev)
     newFrame.pose = dev->pose(XME_LAST_AVAILABLE_FRAME);
     newFrame.sensorsData = dev->sampleData(XME_LAST_AVAILABLE_FRAME);
     // or suitSample (int frameNumber)??
- 
 
     std::unique_lock<std::mutex> lock(m_processorGuard);
-    //copy data into processor queue
+    // copy data into processor queue
     m_lastFrameData = std::move(newFrame);
     m_lastFrameDataWritten = true;
     m_processorVariable.notify_one();
-
 }
 
-void  yarp::dev::XsensMVN::XsensMVNPrivate::onHardwareDisconnected(XmeControl*)
+void yarp::dev::XsensMVN::XsensMVNPrivate::onHardwareDisconnected(XmeControl*)
 {
     yInfo("Suit disconnected");
     std::unique_lock<std::mutex> lock(m_initializationMutex);
@@ -660,14 +715,16 @@ void  yarp::dev::XsensMVN::XsensMVNPrivate::onHardwareDisconnected(XmeControl*)
     m_initializationVariable.notify_one();
 }
 
-void yarp::dev::XsensMVN::XsensMVNPrivate::calibratorHasReceivedNewCalibrationPose(const xsens::XsensMVNCalibrator* const sender, 
+void yarp::dev::XsensMVN::XsensMVNPrivate::calibratorHasReceivedNewCalibrationPose(
+    const xsens::XsensMVNCalibrator* const sender,
     std::vector<yarp::sig::Vector> newPose)
 {
-    //only manage my own calibrator
-    if (sender != m_calibrator) return;
+    // only manage my own calibrator
+    if (sender != m_calibrator)
+        return;
     std::lock_guard<std::mutex> readLock(m_dataMutex);
 
-    for (unsigned index = 0; index < newPose.size(); ++index) { 
+    for (unsigned index = 0; index < newPose.size(); ++index) {
         m_lastSegmentPosesRead[index] = newPose[index];
         m_lastSegmentVelocitiesRead[index].zero();
         m_lastSegmentAccelerationRead[index].zero();

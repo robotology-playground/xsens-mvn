@@ -1,15 +1,9 @@
 /*
- * Copyright: (C) 2017 iCub Facility
- * Author: Diego Ferigo
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2018 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
- */
-
-/**
- * @file XMLMessageHandler.h
- * @brief Handle XML error with a custom format
- * @author Diego Ferigo
- * @date 06/04/2017
+ * This software may be modified and distributed under the terms of the
+ * GNU Lesser General Public License v2.1 or any later version.
  */
 
 #ifndef XML_MESSAGE_HANDLER_H

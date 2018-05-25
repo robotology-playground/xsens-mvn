@@ -1,15 +1,9 @@
 /*
- * Copyright: (C) 2017 iCub Facility
- * Author: Diego Ferigo
- * CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
+ * Copyright (C) 2018 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
  *
- */
-
-/**
- * @file XMLStreamReader.cpp
- * @brief Validate and parse efficiently big XML documents
- * @author Diego Ferigo
- * @date 19/04/2017
+ * This software may be modified and distributed under the terms of the
+ * GNU Lesser General Public License v2.1 or any later version.
  */
 
 #include "XMLStreamReader.h"
@@ -23,8 +17,8 @@ XMLStreamReader::XMLStreamReader(const string& documentFile, const string& schem
     if (!QCoreApplication::instance()) {
         m_dummyArgc = 1;
         m_dummyArgv = new char[1]{' '};
-        m_coreApp = std::unique_ptr<QCoreApplication>(
-            new QCoreApplication(m_dummyArgc, &m_dummyArgv));
+        m_coreApp =
+            std::unique_ptr<QCoreApplication>(new QCoreApplication(m_dummyArgc, &m_dummyArgv));
     }
 
     // Set the document file (absolute path)

@@ -1,3 +1,7 @@
+# Copyright (C) 2018 Istituto Italiano di Tecnologia (IIT). All rights reserved.
+# This software may be modified and distributed under the terms of the
+# GNU Lesser General Public License v2.1 or any later version.
+
 #.rst:
 # FindXsensXME
 # -----------
@@ -27,20 +31,6 @@
 # This module reads hints about search locations from variables::
 #
 #    XsensXME_ROOT                 - Directory containing the SDK files.
-
-#=============================================================================
-# Copyright 2016  iCub Facility, Istituto Italiano di Tecnologia
-#   Authors: Francesco Romano <francesco.romano@iit.it>
-#
-# Distributed under the OSI-approved BSD License (the "License");
-# see accompanying file Copyright.txt for details.
-#
-# This software is distributed WITHOUT ANY WARRANTY; without even the
-# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-# See the License for more information.
-#=============================================================================
-# (To distribute this file outside of YCM, substitute the full
-#  License text for the above reference.)
 
 if(WIN32)
 

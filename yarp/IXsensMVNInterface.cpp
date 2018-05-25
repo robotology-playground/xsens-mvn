@@ -1,8 +1,10 @@
 /*
-* Copyright(C) 2016 iCub Facility
-* Authors: Francesco Romano
-* CopyPolicy : Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
-*/
+ * Copyright (C) 2018 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * GNU Lesser General Public License v2.1 or any later version.
+ */
 
 #include "IXsensMVNInterface.h"
 

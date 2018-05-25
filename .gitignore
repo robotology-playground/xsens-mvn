@@ -1,4 +1,3 @@
 build/
 .tags
-.clang-format
 compile_commands.json

@@ -2,7 +2,6 @@
 # Author: Diego Ferigo
 # CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
 
-cmake_minimum_required(VERSION 3.1 FATAL_ERROR)
 project(XMLStreamReader VERSION 0.1.0)
 
 message (STATUS "${PROJECT_NAME} version ${${PROJECT_NAME}_VERSION}")

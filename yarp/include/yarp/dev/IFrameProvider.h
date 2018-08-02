@@ -32,9 +32,10 @@ namespace yarp {
     } // namespace experimental
 
     namespace sig {
-        template<class T> class VectorOf;
+        template <class T>
+        class VectorOf;
         typedef VectorOf<double> Vector;
-    }
+    } // namespace sig
 } // namespace yarp
 
 /**

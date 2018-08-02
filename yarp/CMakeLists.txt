@@ -13,7 +13,6 @@ add_library(yarp_experimental SHARED include/yarp/dev/IFrameProvider.h
                                      IXsensMVNInterface.cpp)
 
 target_link_libraries(yarp_experimental YARP::YARP_dev)
-target_include_directories(yarp_experimental SYSTEM PUBLIC ${YARP_INCLUDE_DIRS})
 target_include_directories(yarp_experimental INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_include_directories(yarp_experimental PRIVATE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/yarp/dev>)
 target_include_directories(yarp_experimental PUBLIC  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)

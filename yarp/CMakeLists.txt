@@ -5,9 +5,10 @@
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 # must be shared so as to have a successfull dynamic_cast in yarp plugins view
-add_library(yarp_experimental SHARED include/yarp/dev/IFrameProvider.h
+set(yarp_experimental_public_headers include/yarp/dev/IFrameProvider.h
                                      include/yarp/dev/IIMUFrameProvider.h
-                                     include/yarp/dev/IXsensMVNInterface.h
+                                     include/yarp/dev/IXsensMVNInterface.h)
+add_library(yarp_experimental SHARED ${yarp_experimental_public_headers}
                                      IFrameProvider.cpp
                                      IIMUFrameProvider.cpp
                                      IXsensMVNInterface.cpp)
@@ -18,9 +19,7 @@ target_include_directories(yarp_experimental PRIVATE $<BUILD_INTERFACE:${CMAKE_C
 target_include_directories(yarp_experimental PUBLIC  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 set_target_properties(yarp_experimental PROPERTIES
-                                        PUBLIC_HEADER include/yarp/dev/IFrameProvider.h;
-                                                      include/yarp/dev/IIMUFrameProvider.h;
-                                                      include/yarp/dev/IXsensMVNInterface.h)
+                                        PUBLIC_HEADER "${yarp_experimental_public_headers}")
 
 install(TARGETS yarp_experimental
         EXPORT YARP_experimental

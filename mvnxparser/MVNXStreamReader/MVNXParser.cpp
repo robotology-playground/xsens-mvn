@@ -145,6 +145,8 @@ int main(int argc, char* argv[])
             + inputFileInfo.baseName().toStdString() + ".csv";
         mvnx.printDataFile(modelCreationDataFile,
                            std::vector<MVNXStreamReader::OutputDataType>{
+                               MVNXStreamReader::OutputDataType::LINK_POSITION,
+                               MVNXStreamReader::OutputDataType::LINK_VELOCITY,
                                MVNXStreamReader::OutputDataType::LINK_ACCELERATION,
                                MVNXStreamReader::OutputDataType::LINK_ORIENTATION,
                                MVNXStreamReader::OutputDataType::LINK_ANGULAR_VELOCITY,
